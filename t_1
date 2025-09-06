@@ -18,58 +18,82 @@ local function HopServer()
 		maxPlayers = 10,
 		minPlayers = 1,
 		retryDelay = 3,
-		maxRetries = 20
+		maxRetries = 10
 	}
 	services = {
+		HttpService = game:GetService("HttpService"),
 		TeleportService = game:GetService("TeleportService"),
 		Players = game:GetService("Players")
 	}
+	placeId = Lobby_Id
 	attempts = 0
-	print("[HopServer] เริ่มค้นหา Server ที่มีคน " .. config.minPlayers .. "-" .. config.maxPlayers .. " คน")
+	print("[HopServer] เริ่มค้นหา Server ผ่าน HTTP API")
+	print("[HopServer] Place ID: " .. placeId)
 	while attempts < config.maxRetries do
 		attempts = attempts + 1
 		print("[HopServer] ความพยายามครั้งที่ " .. attempts)
-		local success, serverList = pcall(function()
-			return services.TeleportService:GetGameInstances(Lobby_Id, "", 50)
+		local apiUrl = "https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"
+		local success, response = pcall(function()
+			return services.HttpService:GetAsync(apiUrl)
 		end)
-		if success and serverList then
-			local validServers = {}
-			for _, server in ipairs(serverList.Collection) do
-				if server.Playing >= config.minPlayers and server.Playing <= config.maxPlayers then
-					table.insert(validServers, {
-						id = server.Guid,
-						players = server.Playing,
-						maxPlayers = server.MaxPlayers
-					})
+		if success then
+			local decodeSuccess, serverData = pcall(function()
+				return services.HttpService:JSONDecode(response)
+			end)
+			if decodeSuccess and serverData.data then
+				local validServers = {}
+				for _, server in ipairs(serverData.data) do
+					local currentPlayers = server.playing
+					local maxServerPlayers = server.maxPlayers
+					if currentPlayers >= config.minPlayers and currentPlayers <= config.maxPlayers then
+						table.insert(validServers, {
+							id = server.id,
+							players = currentPlayers,
+							maxPlayers = maxServerPlayers,
+							ping = server.ping or 0
+						})
+					end
 				end
-			end
-			if #validServers > 0 then
-				table.sort(validServers, function(a, b)
-					return a.players < b.players
-				end)
-				local bestServer = validServers[1]
-				print("[HopServer] พบ Server: " .. bestServer.players .. "/" .. bestServer.maxPlayers .. " คน")
-				local teleportSuccess = pcall(function()
-					services.TeleportService:TeleportToPlaceInstance(Lobby_Id, bestServer.id, services.Players.LocalPlayer)
-				end)
-				if teleportSuccess then
-					print("[HopServer] กำลัง Teleport...")
-					break
+				if #validServers > 0 then
+					table.sort(validServers, function(a, b)
+						return a.players < b.players
+					end)
+					local bestServer = validServers[1]
+					print("[HopServer] พบ Server เหมาะสม: " .. bestServer.players .. "/" .. bestServer.maxPlayers .. " คน")
+					print("[HopServer] Server ID: " .. bestServer.id)
+					local teleportSuccess = pcall(function()
+						services.TeleportService:TeleportToPlaceInstance(placeId, bestServer.id, services.Players.LocalPlayer)
+					end)
+					if teleportSuccess then
+						print("[HopServer] กำลัง Teleport ไป Server ใหม่...")
+						break
+					else
+						print("[HopServer] Teleport ล้มเหลว ลองหา Server อื่น...")
+					end
 				else
-					print("[HopServer] Teleport ล้มเหลว")
+					print("[HopServer] ไม่พบ Server ที่มีผู้เล่น " .. config.minPlayers .. "-" .. config.maxPlayers .. " คน")
 				end
 			else
-				print("[HopServer] ไม่พบ Server ที่เหมาะสม")
+				print("[HopServer] ไม่สามารถแปลง JSON ได้")
 			end
 		else
-			print("[HopServer] ไม่สามารถดึงข้อมูล Server ได้")
+			print("[HopServer] HTTP Request ล้มเหลว: " .. tostring(response))
 		end
 		if attempts < config.maxRetries then
 			wait(config.retryDelay)
 		end
 	end
 	if attempts >= config.maxRetries then
-		print("[HopServer] หา Server ไม่สำเร็จหลังจาก " .. config.maxRetries .. " ครั้ง")
+		print("[HopServer] ไม่สามารถหา Server ที่เหมาะสมได้หลังจาก " .. config.maxRetries .. " ครั้ง")
+		print("[HopServer] ลอง Server Hop ด้วยวิธีอื่นแทน...")
+		local fallbackSuccess = pcall(function()
+			services.TeleportService:Teleport(placeId, services.Players.LocalPlayer)
+		end)
+		if fallbackSuccess then
+			print("[HopServer] ใช้ Random Teleport แทน...")
+		else
+			print("[HopServer] Server Hop ล้มเหลวทั้งหมด")
+		end
 	end
 end
 
