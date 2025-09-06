@@ -1,0 +1,318 @@
+repeat
+	wait(1)
+until game:IsLoaded()
+
+if getgenv().RunScript == true then	return end; getgenv().RunScript = true;
+
+queue_on_teleport([[
+loadstring(game:HttpGet("https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_1"))()
+]])
+
+repeat wait(0.1) until game.Players
+
+repeat_stuc_count, Lobby_Id = 0, tonumber(79546208627805);
+HttpService = game:GetService("HttpService");
+
+local function HopServer()
+	config = {
+		maxPlayers = 10,
+		minPlayers = 1,
+		retryDelay = 3,
+		maxRetries = 20
+	}
+	services = {
+		TeleportService = game:GetService("TeleportService"),
+		Players = game:GetService("Players")
+	}
+	attempts = 0
+	print("[HopServer] เริ่มค้นหา Server ที่มีคน " .. config.minPlayers .. "-" .. config.maxPlayers .. " คน")
+	while attempts < config.maxRetries do
+		attempts = attempts + 1
+		print("[HopServer] ความพยายามครั้งที่ " .. attempts)
+		local success, serverList = pcall(function()
+			return services.TeleportService:GetGameInstances(Lobby_Id, "", 50)
+		end)
+		if success and serverList then
+			local validServers = {}
+			for _, server in ipairs(serverList.Collection) do
+				if server.Playing >= config.minPlayers and server.Playing <= config.maxPlayers then
+					table.insert(validServers, {
+						id = server.Guid,
+						players = server.Playing,
+						maxPlayers = server.MaxPlayers
+					})
+				end
+			end
+			if #validServers > 0 then
+				table.sort(validServers, function(a, b)
+					return a.players < b.players
+				end)
+				local bestServer = validServers[1]
+				print("[HopServer] พบ Server: " .. bestServer.players .. "/" .. bestServer.maxPlayers .. " คน")
+				local teleportSuccess = pcall(function()
+					services.TeleportService:TeleportToPlaceInstance(Lobby_Id, bestServer.id, services.Players.LocalPlayer)
+				end)
+				if teleportSuccess then
+					print("[HopServer] กำลัง Teleport...")
+					break
+				else
+					print("[HopServer] Teleport ล้มเหลว")
+				end
+			else
+				print("[HopServer] ไม่พบ Server ที่เหมาะสม")
+			end
+		else
+			print("[HopServer] ไม่สามารถดึงข้อมูล Server ได้")
+		end
+		if attempts < config.maxRetries then
+			wait(config.retryDelay)
+		end
+	end
+	if attempts >= config.maxRetries then
+		print("[HopServer] หา Server ไม่สำเร็จหลังจาก " .. config.maxRetries .. " ครั้ง")
+	end
+end
+
+repeat
+	wait(0.1)
+	if repeat_stuc_count < 3 then
+		repeat_stuc_count = repeat_stuc_count + 0.1
+	else
+		wait(1)
+		HopServer()
+	end
+until game.Players.LocalPlayer.Character
+
+l = game.Players.LocalPlayer;
+plrGUI = l.PlayerGui;
+TimeWaitLoadGame = 0;
+
+repeat
+	wait(0.1)
+	TimeWaitLoadGame = TimeWaitLoadGame + 0.1
+	if TimeWaitLoadGame > 3 or l:GetAttribute("HasDied") == true then
+		wait(1)
+		HopServer()
+	end
+until l.Character and l.Character:FindFirstChild("HumanoidRootPart") and l.Character:FindFirstChild("Humanoid") 
+
+local function formatTime(seconds)
+	local hours = math.floor(seconds / 3600)
+	local minutes = math.floor((seconds % 3600) / 60)
+	local secs = seconds % 60
+	return hours, minutes, secs
+end
+
+ch = game.Players.LocalPlayer.Character;
+hu = ch:FindFirstChild("Humanoid");
+hmn = ch:FindFirstChild("HumanoidRootPart");
+cam = workspace.CurrentCamera;
+
+task.spawn(function()
+	OutTick, LastPosition, Stuck_Count = 0, hmn.Position, 0
+	while wait(1) do
+		OutTick = OutTick + 1
+		Dis_Pl = (LastPosition - hmn.Position).Magnitude
+		if Dis_Pl < 5 then
+			Stuck_Count = Stuck_Count + 1
+		end
+		print("OutTick "..OutTick)
+		if OutTick >= 25 or Stuck_Count > 2 or l:GetAttribute("HasDied") == true then
+			wait(1)
+			HopServer()
+		end
+		LastPosition = hmn.Position
+	end
+end)
+
+local function sendWebhook(Diamon_Count)
+	embed = {
+		["title"] = "📊 การแจ้งเตือนเพชร",
+		["description"] = 
+			"**ผู้เล่น:** `" .. l.Name .. "`\n" ..
+			"**เพชร:** `" .. Diamon_Count .. "💎`",
+		["color"] = tonumber(0xFF0000),
+		["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+	}
+	data = {
+		["username"] = "Somtank การแจ้งเตือน",
+		["avatar_url"] = "https://media.discordapp.net/attachments/1367059030274609183/1412413636131033159/IconNew.jpg?ex=68b83434&is=68b6e2b4&hm=f2413ea4327ecfbb8c9357ac2f447bac0f97dc11bb1ce65e11241af520348711&=&format=webp&width=656&height=656",
+		["embeds"] = {embed}
+	}
+	jsonData = HttpService:JSONEncode(data)
+	if http_request then
+		http_request({
+			Url = "https://discord.com/api/webhooks/1378634865796317326/jzRjm7lmUsT5w79Py1ryr2AxQ8UNIf6pbu07h-mR9_n8R4-kmvEIQ_pytguKSYdCQQ7F",
+			Method = "POST",
+			Headers = {["Content-Type"] = "application/json"},
+			Body = jsonData
+		})
+	end
+end
+
+local function TextLabelSet(TextLabel_Frame, X_Posi, Text_Color, Text)
+	TextLabel_Frame.Size = UDim2.new(0.81,0,0.1,0)
+	TextLabel_Frame.Position = UDim2.new(0.1,0,X_Posi,0)
+	TextLabel_Frame.BackgroundTransparency = 1
+	TextLabel_Frame.TextScaled = true
+	TextLabel_Frame.TextColor3 = Text_Color
+	TextLabel_Frame.RichText = true
+	TextLabel_Frame.Text = Text
+	TextLabel_Frame.Font = Enum.Font.Highway
+end
+
+pcall(function()
+	
+	ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+	
+	Dark_Frame = Instance.new("Frame", ScreenGui)
+	
+	ScreenGui.Name = string.gsub(string.char(math.random(65,90),math.random(65,90))..math.random(1000,9999),"%s","");
+	ScreenGui.Enabled = true;-- เปิด / ปิด *
+
+	Dark_Frame.Size = UDim2.new(2,0,2,0);
+	Dark_Frame.Position = UDim2.new(-0.5,0,-0.5,0);
+	Dark_Frame.BackgroundColor3 = Color3.new(0.0235294, 0.0235294, 0.0235294);
+	
+	Title = Instance.new("TextLabel", ScreenGui)
+	TextLabelSet(Title, 0.1, Color3.new(0.501961, 0.25098, 1), "Somtank")
+	
+	Player_name = Instance.new("TextLabel", ScreenGui)
+	TextLabelSet(Player_name, 0.3, Color3.new(1, 1, 1), l.DisplayName)
+	
+	Diamon_Count = Instance.new("TextLabel", ScreenGui)
+	TextLabelSet(Diamon_Count, 0.5, Color3.new(1, 1, 1), "เพชรที่มี "..tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text).." 💎")
+	
+	Time_Farm = Instance.new("TextLabel", ScreenGui)
+	TextLabelSet(Time_Farm, 0.7, Color3.new(1, 1, 1), "")
+	
+	task.spawn(function()
+		while true do
+			if getgenv().Info_User then
+				if getgenv().Info_User.Start_Farming then
+					pcall(function()
+						diff = tonumber(os.time()) - tonumber(getgenv().Info_User.Start_Farming)
+						h, m, s = formatTime(diff)
+						Time_Farm.Text = "⌛ "..h.." ชั่วโมง "..m.." นาที "..s.." วินาที"
+					end)
+				end
+			end
+			wait(1)
+		end
+	end)
+	
+end)
+
+Farm_Cound_Load, Joind_OldSer_Stats = 0, 0;
+if getgenv().Info_User then
+	Rejoid_Old_Server = false
+	if getgenv().Info_User.Uid_In_Old_Server then
+		Foud_Old_Player_Count = 0
+		for _,v in ipairs(getgenv().Info_User.Uid_In_Old_Server) do
+			for _,v2 in ipairs(game.Players:GetChildren()) do
+				if v2.UserId == v then
+					Foud_Old_Player_Count = Foud_Old_Player_Count + 1
+				end
+			end
+		end
+		if Foud_Old_Player_Count > ((#game.Players:GetChildren() - 1) / 2) then
+			task.spawn(function()
+				Rejoid_Old_Server = true
+				wait(2)
+				HopServer()
+			end)
+		end
+	end
+	if getgenv().Info_User.Farm_Cound and Rejoid_Old_Server == false then
+		Farm_Cound_Load = tonumber(getgenv().Info_User.Farm_Cound) + 1
+		if Farm_Cound_Load >= 10 then
+			Farm_Cound_Load = 0
+			DiamondCount_label = plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count")
+			if DiamondCount_label then
+				sendWebhook(tonumber(DiamondCount_label.Text) or "Fail")
+			end
+		end
+		print("******************************** Farm Count "..Farm_Cound_Load)
+	end
+end
+
+task.spawn(function()
+	wait(0.2)
+	pcall(function()
+		Start_Farming_Time = tonumber(os.time())
+		if getgenv().Info_User then
+			if getgenv().Info_User.Start_Farming then
+				Start_Farming_Time = getgenv().Info_User.Start_Farming
+			else
+				Start_Farming_Time = tonumber(os.time())
+			end
+		end
+		Uid_In_Server = {}
+		for _,v in ipairs(game.Players:GetChildren()) do
+			if v ~= l then
+				table.insert(Uid_In_Server, v.UserId);
+			end
+		end
+		Info_User = {
+			Farm_Cound = Farm_Cound_Load,
+			Uid_In_Old_Server = Uid_In_Server,
+			Start_Farming = Start_Farming_Time
+		}
+		jsonData = HttpService:JSONEncode(Info_User)
+		queue_on_teleport([[
+      local HttpService = game:GetService("HttpService")
+      local Uid_In_Server = ']] .. jsonData .. [['
+      getgenv().Info_User = HttpService:JSONDecode(Uid_In_Server)
+    ]])
+	end)
+end)
+
+ReplicatedStorage = game:GetService("ReplicatedStorage")
+RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+RequestStartDraggingItem = RemoteEvents:FindFirstChild("RequestStartDraggingItem")
+RequestTakeDiamonds = RemoteEvents:FindFirstChild("RequestTakeDiamonds")
+StopDraggingItem = RemoteEvents:FindFirstChild("StopDraggingItem")
+Chest_Count_Opened = 0;
+
+hu.HipHeight = 16
+
+local function matchesAllowedKeyword(value, allowedKeywords)
+	value = value:lower()
+	for _, keyword in ipairs(allowedKeywords) do
+		if string.find(value, keyword:lower()) then
+			return true
+		end
+	end
+	return false
+end
+for _,v in ipairs(workspace.Items:GetChildren()) do
+	if matchesAllowedKeyword(v.Name, {"Chest"}) then
+		pcall(function()
+			hmn.CFrame = CFrame.new(v.PrimaryPart.Position) * CFrame.new(0,5,0)
+			wait(0.05)
+			fireproximityprompt(v.PrimaryPart.ProximityAttachment.ProximityInteraction)
+			Chest_Count_Opened = Chest_Count_Opened + 1
+			wait(0.05)
+			TextLabel_Frame.Text = '<font color="#CDA4DE">Somtank Script กำลังฟาร์ม</font> <b>|</b> <font color="#87CEFA">กล่อง</font> ที่ '..Chest_Count_Opened
+		end)
+	end
+end
+for _, Model in ipairs(workspace.Items:GetChildren()) do
+	if Model.Name == "Diamond" then
+		pcall(function()
+			if Model.PrimaryPart then
+				wait(0.05)
+				hmn.CFrame = Model.PrimaryPart.CFrame
+				wait(0.05)
+				RequestStartDraggingItem:FireServer(Model)
+				wait(0.05)
+				RequestTakeDiamonds:FireServer(Model)
+				wait(0.05)
+				StopDraggingItem:FireServer(Model)
+			end
+			wait()
+		end)
+	end
+end
+wait(1)
+HopServer()
