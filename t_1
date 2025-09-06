@@ -12,89 +12,100 @@ repeat wait(0.1) until game.Players
 
 repeat_stuc_count, Lobby_Id = 0, tonumber(79546208627805);
 HttpService = game:GetService("HttpService");
+TeleportService = game:GetService("TeleportService");
+Players = game:GetService("Players");
 
-local function HopServer()
-	config = {
-		maxPlayers = 10,
-		minPlayers = 1,
-		retryDelay = 3,
-		maxRetries = 10
-	}
-	services = {
-		HttpService = game:GetService("HttpService"),
-		TeleportService = game:GetService("TeleportService"),
-		Players = game:GetService("Players")
-	}
-	placeId = Lobby_Id
-	attempts = 0
-	print("[HopServer] เริ่มค้นหา Server ผ่าน HTTP API")
-	print("[HopServer] Place ID: " .. placeId)
-	while attempts < config.maxRetries do
-		attempts = attempts + 1
-		print("[HopServer] ความพยายามครั้งที่ " .. attempts)
-		local apiUrl = "https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"
-		local success, response = pcall(function()
-			return services.HttpService:GetAsync(apiUrl)
+local function HopServer(player)
+	local function hopToLowPopServer()
+		local success, servers = pcall(function()
+			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. Lobby_Id .. "/servers/Public?sortOrder=Asc&limit=100"))
 		end)
-		if success then
-			local decodeSuccess, serverData = pcall(function()
-				return services.HttpService:JSONDecode(response)
-			end)
-			if decodeSuccess and serverData.data then
-				local validServers = {}
-				for _, server in ipairs(serverData.data) do
-					local currentPlayers = server.playing
-					local maxServerPlayers = server.maxPlayers
-					if currentPlayers >= config.minPlayers and currentPlayers <= config.maxPlayers then
-						table.insert(validServers, {
-							id = server.id,
-							players = currentPlayers,
-							maxPlayers = maxServerPlayers,
-							ping = server.ping or 0
-						})
-					end
-				end
-				if #validServers > 0 then
-					table.sort(validServers, function(a, b)
-						return a.players < b.players
-					end)
-					local bestServer = validServers[1]
-					print("[HopServer] พบ Server เหมาะสม: " .. bestServer.players .. "/" .. bestServer.maxPlayers .. " คน")
-					print("[HopServer] Server ID: " .. bestServer.id)
-					local teleportSuccess = pcall(function()
-						services.TeleportService:TeleportToPlaceInstance(placeId, bestServer.id, services.Players.LocalPlayer)
-					end)
-					if teleportSuccess then
-						print("[HopServer] กำลัง Teleport ไป Server ใหม่...")
-						break
-					else
-						print("[HopServer] Teleport ล้มเหลว ลองหา Server อื่น...")
-					end
-				else
-					print("[HopServer] ไม่พบ Server ที่มีผู้เล่น " .. config.minPlayers .. "-" .. config.maxPlayers .. " คน")
-				end
-			else
-				print("[HopServer] ไม่สามารถแปลง JSON ได้")
+		if not success or not servers or not servers.data then
+			warn("ไม่สามารถดึงข้อมูล server ได้")
+			return false
+		end
+		bestServer = nil
+		lowestPlayerCount = math.huge
+		for _, server in pairs(servers.data) do
+			if server.playing < server.maxPlayers and server.playing < lowestPlayerCount and server.id ~= game.JobId then
+				bestServer = server
+				lowestPlayerCount = server.playing
 			end
-		else
-			print("[HopServer] HTTP Request ล้มเหลว: " .. tostring(response))
 		end
-		if attempts < config.maxRetries then
-			wait(config.retryDelay)
+		if bestServer then
+			local teleportSuccess = pcall(function()
+				TeleportService:TeleportToPlaceInstance(Lobby_Id, bestServer.id, player)
+			end)
+			return teleportSuccess
+		else
+			warn("ไม่พบ server ที่เหมาะสม")
+			return false
 		end
 	end
-	if attempts >= config.maxRetries then
-		print("[HopServer] ไม่สามารถหา Server ที่เหมาะสมได้หลังจาก " .. config.maxRetries .. " ครั้ง")
-		print("[HopServer] ลอง Server Hop ด้วยวิธีอื่นแทน...")
-		local fallbackSuccess = pcall(function()
-			services.TeleportService:Teleport(placeId, services.Players.LocalPlayer)
+	local function hopToEmptyServer()
+		local success, servers = pcall(function()
+			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. Lobby_Id .. "/servers/Public?sortOrder=Asc&limit=100"))
 		end)
-		if fallbackSuccess then
-			print("[HopServer] ใช้ Random Teleport แทน...")
+		if not success or not servers or not servers.data then
+			warn("ไม่สามารถดึงข้อมูล server ได้")
+			return false
+		end
+		for _, server in pairs(servers.data) do
+			if server.playing == 0 and server.id ~= game.JobId then
+				local teleportSuccess = pcall(function()
+					TeleportService:TeleportToPlaceInstance(Lobby_Id, server.id, player)
+				end)
+				return teleportSuccess
+			end
+		end
+		warn("ไม่พบ server ว่าง กำลัง hop ไป server ที่มีคนน้อยที่สุด...")
+		return hopToLowPopServer()
+	end
+	local function hopToServerWithPlayers(targetPlayerCount)
+		local success, servers = pcall(function()
+			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. Lobby_Id .. "/servers/Public?sortOrder=Asc&limit=100"))
+		end)
+		if not success or not servers or not servers.data then
+			warn("ไม่สามารถดึงข้อมูล server ได้")
+			return false
+		end
+		for _, server in pairs(servers.data) do
+			if server.playing == targetPlayerCount and server.id ~= game.JobId then
+				local teleportSuccess = pcall(function()
+					TeleportService:TeleportToPlaceInstance(Lobby_Id, server.id, player)
+				end)
+				return teleportSuccess
+			end
+		end
+		warn("ไม่พบ server ที่มี " .. targetPlayerCount .. " คน")
+		return false
+	end
+	local function hopToRandomServer()
+		local success, servers = pcall(function()
+			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. Lobby_Id .. "/servers/Public?sortOrder=Asc&limit=100"))
+		end)
+		if not success or not servers or not servers.data then
+			warn("ไม่สามารถดึงข้อมูル server ได้")
+			return false
+		end
+		availableServers = {}
+		for _, server in pairs(servers.data) do
+			if server.playing < server.maxPlayers and server.id ~= game.JobId then
+				table.insert(availableServers, server)
+			end
+		end
+		if #availableServers > 0 then
+			local randomServer = availableServers[math.random(1, #availableServers)]
+			local teleportSuccess = pcall(function()
+				TeleportService:TeleportToPlaceInstance(Lobby_Id, randomServer.id, player)
+			end)
+			return teleportSuccess
 		else
-			print("[HopServer] Server Hop ล้มเหลวทั้งหมด")
+			warn("ไม่พบ server ที่ใช้งานได้")
+			return false
 		end
 	end
+	hopToLowPopServer()
 end
 
 repeat
@@ -103,7 +114,7 @@ repeat
 		repeat_stuc_count = repeat_stuc_count + 0.1
 	else
 		wait(1)
-		HopServer()
+		HopServer(game.Players.LocalPlayer)
 	end
 until game.Players.LocalPlayer.Character
 
@@ -116,7 +127,7 @@ repeat
 	TimeWaitLoadGame = TimeWaitLoadGame + 0.1
 	if TimeWaitLoadGame > 3 or l:GetAttribute("HasDied") == true then
 		wait(1)
-		HopServer()
+		HopServer(l)
 	end
 until l.Character and l.Character:FindFirstChild("HumanoidRootPart") and l.Character:FindFirstChild("Humanoid") 
 
@@ -143,7 +154,7 @@ task.spawn(function()
 		print("OutTick "..OutTick)
 		if OutTick >= 25 or Stuck_Count > 2 or l:GetAttribute("HasDied") == true then
 			wait(1)
-			HopServer()
+			HopServer(l)
 		end
 		LastPosition = hmn.Position
 	end
@@ -243,7 +254,7 @@ if getgenv().Info_User then
 			task.spawn(function()
 				Rejoid_Old_Server = true
 				wait(2)
-				HopServer()
+				HopServer(l)
 			end)
 		end
 	end
@@ -339,4 +350,4 @@ for _, Model in ipairs(workspace.Items:GetChildren()) do
 	end
 end
 wait(1)
-HopServer()
+HopServer(l)
