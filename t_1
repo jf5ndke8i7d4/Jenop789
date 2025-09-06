@@ -114,7 +114,7 @@ repeat
 		repeat_stuc_count = repeat_stuc_count + 0.1
 	else
 		wait(1)
-		HopServer(game.Players.LocalPlayer)
+		game:GetService("TeleportService"):Teleport(126509999114328)
 	end
 until game.Players.LocalPlayer.Character
 
@@ -127,7 +127,7 @@ repeat
 	TimeWaitLoadGame = TimeWaitLoadGame + 0.1
 	if TimeWaitLoadGame > 3 or l:GetAttribute("HasDied") == true then
 		wait(1)
-		HopServer(l)
+		game:GetService("TeleportService"):Teleport(126509999114328)
 	end
 until l.Character and l.Character:FindFirstChild("HumanoidRootPart") and l.Character:FindFirstChild("Humanoid") 
 
@@ -154,7 +154,7 @@ task.spawn(function()
 		print("OutTick "..OutTick)
 		if OutTick >= 25 or Stuck_Count > 2 or l:GetAttribute("HasDied") == true then
 			wait(1)
-			HopServer(l)
+			game:GetService("TeleportService"):Teleport(126509999114328)
 		end
 		LastPosition = hmn.Position
 	end
@@ -350,4 +350,4 @@ for _, Model in ipairs(workspace.Items:GetChildren()) do
 	end
 end
 wait(1)
-HopServer(l)
+game:GetService("TeleportService"):Teleport(126509999114328)
