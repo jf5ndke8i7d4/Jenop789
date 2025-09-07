@@ -1,4 +1,4 @@
-repeat--005
+repeat--456456
 	wait(1)
 until game:IsLoaded()
 
@@ -20,7 +20,12 @@ Info_Script = {
 	Start_Farming = Start_Farming_Time
 }
 UserInfo = HttpService:JSONEncode(Info_Script)
-Start_Diamon_Value = tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text) or 0
+queue_on_teleport([[
+ local HttpService = game:GetService("HttpService")
+ local Uid_In_Server = ']] .. UserInfo .. [['
+ getgenv().Info_Script = HttpService:JSONDecode(Uid_In_Server)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_1"))()
+]])
 local function HopServer(player)
 	TeleportService = game:GetService("TeleportService");
 	Players = game:GetService("Players");
@@ -116,12 +121,6 @@ local function HopServer(player)
 	end
 	hopToLowPopServer()
 end
-task.spawn(function()
-	repeat
-		Start_Diamon_Value = tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text) or 0
-		wait(0.1)
-	until Start_Diamon_Value ~= 0
-end)
 Joind_OldSer_Stats = 0;
 if getgenv().Info_User then
 	Rejoid_Old_Server = false
@@ -165,13 +164,6 @@ task.spawn(function()
     ]])
 	end)
 end)
-
-queue_on_teleport([[
- local HttpService = game:GetService("HttpService")
- local Uid_In_Server = ']] .. UserInfo .. [['
- getgenv().Info_Script = HttpService:JSONDecode(Uid_In_Server)
-loadstring(game:HttpGet("https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_1"))()
-]])
 
 local function TextLabelSet(TextLabel_Frame, X_Posi, Text_Color, Text)
 	TextLabel_Frame.Size = UDim2.new(0.81,0,0.1,0)
@@ -359,8 +351,11 @@ end
 wait(1)
 game:GetService("TeleportService"):Teleport(126509999114328)
 End_Diamon_Value = tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text) or 0
-if Start_Diamon_Value ~= 0 and End_Diamon_Value > Start_Diamon_Value then
-	sendWebhook(End_Diamon_Value)
+if getgenv().Diamon_Count_Value then
+	if End_Diamon_Value > 0 and End_Diamon_Value > tonumber(getgenv().Diamon_Count_Value) then
+		sendWebhook(End_Diamon_Value)
+	end
 end
+queue_on_teleport([[getgenv().Diamon_Count_Value = ']] .. End_Diamon_Value .. [[']])
 print("teleport 4")
 wait(10)
