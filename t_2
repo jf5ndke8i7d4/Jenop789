@@ -1,4 +1,4 @@
-repeat--003
+repeat--006
 	wait(1)
 until game:IsLoaded()
 
@@ -20,13 +20,101 @@ Info_Script = {
 	Start_Farming = Start_Farming_Time
 }
 UserInfo = HttpService:JSONEncode(Info_Script)
-Start_Diamon_Value = tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text) or 0
-task.spawn(function()
-	repeat
-		Start_Diamon_Value = tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text) or 0
-		wait(0.1)
-	until Start_Diamon_Value ~= 0
-end)
+local function HopServer(player)
+	TeleportService = game:GetService("TeleportService");
+	Players = game:GetService("Players");
+	Lobby_Id = tonumber(79546208627805)
+	local function hopToLowPopServer()
+		local success, servers = pcall(function()
+			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. Lobby_Id .. "/servers/Public?sortOrder=Asc&limit=100"))
+		end)
+		if not success or not servers or not servers.data then
+			warn("ไม่สามารถดึงข้อมูล server ได้")
+			return false
+		end
+		bestServer = nil
+		lowestPlayerCount = math.huge
+		for _, server in pairs(servers.data) do
+			if server.playing < server.maxPlayers and server.playing < lowestPlayerCount and server.id ~= game.JobId then
+				bestServer = server
+				lowestPlayerCount = server.playing
+			end
+		end
+		if bestServer then
+			local teleportSuccess = pcall(function()
+				TeleportService:TeleportToPlaceInstance(Lobby_Id, bestServer.id, player)
+			end)
+			return teleportSuccess
+		else
+			warn("ไม่พบ server ที่เหมาะสม")
+			return false
+		end
+	end
+	local function hopToEmptyServer()
+		local success, servers = pcall(function()
+			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. Lobby_Id .. "/servers/Public?sortOrder=Asc&limit=100"))
+		end)
+		if not success or not servers or not servers.data then
+			warn("ไม่สามารถดึงข้อมูล server ได้")
+			return false
+		end
+		for _, server in pairs(servers.data) do
+			if server.playing == 0 and server.id ~= game.JobId then
+				local teleportSuccess = pcall(function()
+					TeleportService:TeleportToPlaceInstance(Lobby_Id, server.id, player)
+				end)
+				return teleportSuccess
+			end
+		end
+		warn("ไม่พบ server ว่าง กำลัง hop ไป server ที่มีคนน้อยที่สุด...")
+		return hopToLowPopServer()
+	end
+	local function hopToServerWithPlayers(targetPlayerCount)
+		local success, servers = pcall(function()
+			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. Lobby_Id .. "/servers/Public?sortOrder=Asc&limit=100"))
+		end)
+		if not success or not servers or not servers.data then
+			warn("ไม่สามารถดึงข้อมูล server ได้")
+			return false
+		end
+		for _, server in pairs(servers.data) do
+			if server.playing == targetPlayerCount and server.id ~= game.JobId then
+				local teleportSuccess = pcall(function()
+					TeleportService:TeleportToPlaceInstance(Lobby_Id, server.id, player)
+				end)
+				return teleportSuccess
+			end
+		end
+		warn("ไม่พบ server ที่มี " .. targetPlayerCount .. " คน")
+		return false
+	end
+	local function hopToRandomServer()
+		local success, servers = pcall(function()
+			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. Lobby_Id .. "/servers/Public?sortOrder=Asc&limit=100"))
+		end)
+		if not success or not servers or not servers.data then
+			warn("ไม่สามารถดึงข้อมูル server ได้")
+			return false
+		end
+		availableServers = {}
+		for _, server in pairs(servers.data) do
+			if server.playing < server.maxPlayers and server.id ~= game.JobId then
+				table.insert(availableServers, server)
+			end
+		end
+		if #availableServers > 0 then
+			local randomServer = availableServers[math.random(1, #availableServers)]
+			local teleportSuccess = pcall(function()
+				TeleportService:TeleportToPlaceInstance(Lobby_Id, randomServer.id, player)
+			end)
+			return teleportSuccess
+		else
+			warn("ไม่พบ server ที่ใช้งานได้")
+			return false
+		end
+	end
+	hopToLowPopServer()
+end
 Joind_OldSer_Stats = 0;
 if getgenv().Info_User then
 	Rejoid_Old_Server = false
@@ -142,102 +230,7 @@ pcall(function()
 
 end)
 
-repeat_stuc_count, Lobby_Id = 0, tonumber(79546208627805);
-TeleportService = game:GetService("TeleportService");
-Players = game:GetService("Players");
-
-local function HopServer(player)
-	local function hopToLowPopServer()
-		local success, servers = pcall(function()
-			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. Lobby_Id .. "/servers/Public?sortOrder=Asc&limit=100"))
-		end)
-		if not success or not servers or not servers.data then
-			warn("ไม่สามารถดึงข้อมูล server ได้")
-			return false
-		end
-		bestServer = nil
-		lowestPlayerCount = math.huge
-		for _, server in pairs(servers.data) do
-			if server.playing < server.maxPlayers and server.playing < lowestPlayerCount and server.id ~= game.JobId then
-				bestServer = server
-				lowestPlayerCount = server.playing
-			end
-		end
-		if bestServer then
-			local teleportSuccess = pcall(function()
-				TeleportService:TeleportToPlaceInstance(Lobby_Id, bestServer.id, player)
-			end)
-			return teleportSuccess
-		else
-			warn("ไม่พบ server ที่เหมาะสม")
-			return false
-		end
-	end
-	local function hopToEmptyServer()
-		local success, servers = pcall(function()
-			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. Lobby_Id .. "/servers/Public?sortOrder=Asc&limit=100"))
-		end)
-		if not success or not servers or not servers.data then
-			warn("ไม่สามารถดึงข้อมูล server ได้")
-			return false
-		end
-		for _, server in pairs(servers.data) do
-			if server.playing == 0 and server.id ~= game.JobId then
-				local teleportSuccess = pcall(function()
-					TeleportService:TeleportToPlaceInstance(Lobby_Id, server.id, player)
-				end)
-				return teleportSuccess
-			end
-		end
-		warn("ไม่พบ server ว่าง กำลัง hop ไป server ที่มีคนน้อยที่สุด...")
-		return hopToLowPopServer()
-	end
-	local function hopToServerWithPlayers(targetPlayerCount)
-		local success, servers = pcall(function()
-			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. Lobby_Id .. "/servers/Public?sortOrder=Asc&limit=100"))
-		end)
-		if not success or not servers or not servers.data then
-			warn("ไม่สามารถดึงข้อมูล server ได้")
-			return false
-		end
-		for _, server in pairs(servers.data) do
-			if server.playing == targetPlayerCount and server.id ~= game.JobId then
-				local teleportSuccess = pcall(function()
-					TeleportService:TeleportToPlaceInstance(Lobby_Id, server.id, player)
-				end)
-				return teleportSuccess
-			end
-		end
-		warn("ไม่พบ server ที่มี " .. targetPlayerCount .. " คน")
-		return false
-	end
-	local function hopToRandomServer()
-		local success, servers = pcall(function()
-			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. Lobby_Id .. "/servers/Public?sortOrder=Asc&limit=100"))
-		end)
-		if not success or not servers or not servers.data then
-			warn("ไม่สามารถดึงข้อมูル server ได้")
-			return false
-		end
-		availableServers = {}
-		for _, server in pairs(servers.data) do
-			if server.playing < server.maxPlayers and server.id ~= game.JobId then
-				table.insert(availableServers, server)
-			end
-		end
-		if #availableServers > 0 then
-			local randomServer = availableServers[math.random(1, #availableServers)]
-			local teleportSuccess = pcall(function()
-				TeleportService:TeleportToPlaceInstance(Lobby_Id, randomServer.id, player)
-			end)
-			return teleportSuccess
-		else
-			warn("ไม่พบ server ที่ใช้งานได้")
-			return false
-		end
-	end
-	hopToLowPopServer()
-end
+repeat_stuc_count = 0;
 
 repeat
 	wait(0.1)
@@ -318,7 +311,6 @@ RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 RequestStartDraggingItem = RemoteEvents:FindFirstChild("RequestStartDraggingItem")
 RequestTakeDiamonds = RemoteEvents:FindFirstChild("RequestTakeDiamonds")
 StopDraggingItem = RemoteEvents:FindFirstChild("StopDraggingItem")
-Chest_Count_Opened = 0;
 
 hu.HipHeight = 16
 
@@ -335,11 +327,9 @@ for _,v in ipairs(workspace.Items:GetChildren()) do
 	if matchesAllowedKeyword(v.Name, {"Chest"}) then
 		pcall(function()
 			hmn.CFrame = CFrame.new(v.PrimaryPart.Position) * CFrame.new(0,5,0)
-			wait(0.05)
+			wait(0.07)
 			fireproximityprompt(v.PrimaryPart.ProximityAttachment.ProximityInteraction)
-			Chest_Count_Opened = Chest_Count_Opened + 1
-			wait(0.05)
-			TextLabel_Frame.Text = '<font color="#CDA4DE">Somtank Script กำลังฟาร์ม</font> <b>|</b> <font color="#87CEFA">กล่อง</font> ที่ '..Chest_Count_Opened
+			wait(0.07)
 		end)
 	end
 end
@@ -347,23 +337,22 @@ for _, Model in ipairs(workspace.Items:GetChildren()) do
 	if Model.Name == "Diamond" then
 		pcall(function()
 			if Model.PrimaryPart then
-				wait(0.05)
+				wait(0.07)
 				hmn.CFrame = Model.PrimaryPart.CFrame
-				wait(0.05)
+				wait(0.07)
 				RequestStartDraggingItem:FireServer(Model)
-				wait(0.05)
+				wait(0.07)
 				RequestTakeDiamonds:FireServer(Model)
-				wait(0.05)
+				wait(0.07)
 				StopDraggingItem:FireServer(Model)
 			end
-			wait()
 		end)
 	end
 end
 wait(1)
 game:GetService("TeleportService"):Teleport(126509999114328)
 End_Diamon_Value = tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text) or 0
-if Start_Diamon_Value ~= 0 and End_Diamon_Value > Start_Diamon_Value then
+if End_Diamon_Value > 0 then
 	sendWebhook(End_Diamon_Value)
 end
 print("teleport 4")
