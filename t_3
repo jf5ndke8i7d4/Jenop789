@@ -1,4 +1,4 @@
-repeat
+repeat--001
 	wait(1)
 until game:IsLoaded()
 
@@ -116,21 +116,31 @@ pcall(function()
 	TextLabelSet(Diamon_Count, 0.5, Color3.new(1, 1, 1), "")
 
 	Time_Farm = Instance.new("TextLabel", ScreenGui)
-	TextLabelSet(Time_Farm, 0.7, Color3.new(1, 1, 1), "")
+	TextLabelSet(Time_Farm, 0.7, Color3.new(1, 0.890196, 0.501961), "")
 
 	task.spawn(function()
+		local function formatTime(seconds)
+			local hours = math.floor(seconds / 3600)
+			local minutes = math.floor((seconds % 3600) / 60)
+			local secs = seconds % 60
+			return hours, minutes, secs
+		end
 		while true do
 			if getgenv().Info_Script then
 				if getgenv().Info_Script.Start_Farming then
 					pcall(function()
-						diff = tonumber(os.time()) - tonumber(getgenv().Start_Farming) or Start_Farming_Time
+						Diamon_Value = tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text)
+						if Diamon_Value == 0 then
+							Diamon_Value = "-"
+						end
+						diff = tonumber(os.time()) - tonumber(getgenv().Info_Script.Start_Farming)
 						h, m, s = formatTime(diff)
 						Time_Farm.Text = "⌛ "..h.." ชั่วโมง "..m.." นาที "..s.." วินาที"
-						Diamon_Count.Text = "เพชรที่มี "..tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text).." 💎"
+						Diamon_Count.Text = "เพชรที่มี "..Diamon_Value.." 💎"
 					end)
 				end
 			end
-			wait(0.1)
+			wait(0.3)
 		end
 	end)
 
@@ -256,13 +266,6 @@ repeat
 		print("teleport 2")
 	end
 until l.Character and l.Character:FindFirstChild("HumanoidRootPart") and l.Character:FindFirstChild("Humanoid") 
-
-local function formatTime(seconds)
-	local hours = math.floor(seconds / 3600)
-	local minutes = math.floor((seconds % 3600) / 60)
-	local secs = seconds % 60
-	return hours, minutes, secs
-end
 
 ch = game.Players.LocalPlayer.Character;
 hu = ch:FindFirstChild("Humanoid");
