@@ -3,12 +3,14 @@ repeat
 until game:IsLoaded()
 
 if getgenv().RunScript == true then	return end; getgenv().RunScript = true;
+repeat wait(0.1) until game.Players
+l = game.Players.LocalPlayer;
 HttpService = game:GetService("HttpService");
 
 Start_Farming_Time = tonumber(os.time())
 if getgenv().Info_Script then
 	if getgenv().Info_Script.Start_Farming then
-		Start_Farming_Time = getgenv().Start_Farming
+		Start_Farming_Time = getgenv().Info_Script.Start_Farming
 	else
 		Start_Farming_Time = tonumber(os.time())
 	end
@@ -18,6 +20,61 @@ Info_Script = {
 }
 UserInfo = HttpService:JSONEncode(Info_Script)
 
+Farm_Cound_Load, Joind_OldSer_Stats = 0, 0;
+if getgenv().Info_User then
+	Rejoid_Old_Server = false
+	if getgenv().Info_User.Uid_In_Old_Server then
+		Foud_Old_Player_Count = 0
+		for _,v in ipairs(getgenv().Info_User.Uid_In_Old_Server) do
+			for _,v2 in ipairs(game.Players:GetChildren()) do
+				if v2.UserId == v then
+					Foud_Old_Player_Count = Foud_Old_Player_Count + 1
+				end
+			end
+		end
+		if Foud_Old_Player_Count > ((#game.Players:GetChildren() - 1) / 2) then
+			task.spawn(function()
+				Rejoid_Old_Server = true
+				wait(0.5)
+				HopServer(l)
+				print("teleport Old Server")
+			end)
+		end
+	end
+	if getgenv().Info_User.Farm_Cound and Rejoid_Old_Server == false then
+		Farm_Cound_Load = tonumber(getgenv().Info_User.Farm_Cound) + 1
+		if Farm_Cound_Load >= 10 then
+			Farm_Cound_Load = 0
+			DiamondCount_label = plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count")
+			if DiamondCount_label then
+				sendWebhook(tonumber(DiamondCount_label.Text) or "Fail")
+			end
+		end
+		print("******************************** Farm Count "..Farm_Cound_Load)
+	end
+end
+
+task.spawn(function()
+	pcall(function()
+		Uid_In_Server = {}
+		for _,v in ipairs(game.Players:GetChildren()) do
+			if v ~= l then
+				table.insert(Uid_In_Server, v.UserId);
+			end
+		end
+		Info_User = {
+			Farm_Cound = Farm_Cound_Load,
+			Uid_In_Old_Server = Uid_In_Server
+		}
+		jsonData2 = HttpService:JSONEncode(Info_User)
+		queue_on_teleport([[
+      local HttpService = game:GetService("HttpService")
+      local Uid_In_Server = ']] .. jsonData2 .. [['
+      getgenv().Info_User = HttpService:JSONDecode(Uid_In_Server)
+    ]])
+	end)
+end)
+
 queue_on_teleport([[
  local HttpService = game:GetService("HttpService")
  local Uid_In_Server = ']] .. UserInfo .. [['
@@ -25,7 +82,6 @@ queue_on_teleport([[
 loadstring(game:HttpGet("https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_2"))()
 ]])
 
-repeat wait(0.1) until game.Players
 
 repeat_stuc_count, Lobby_Id = 0, tonumber(79546208627805);
 TeleportService = game:GetService("TeleportService");
@@ -135,7 +191,6 @@ repeat
 	end
 until game.Players.LocalPlayer.Character
 
-l = game.Players.LocalPlayer;
 plrGUI = l.PlayerGui;
 TimeWaitLoadGame = 0;
 
@@ -235,7 +290,7 @@ pcall(function()
 	TextLabelSet(Player_name, 0.3, Color3.new(1, 1, 1), l.DisplayName)
 	
 	Diamon_Count = Instance.new("TextLabel", ScreenGui)
-	TextLabelSet(Diamon_Count, 0.5, Color3.new(1, 1, 1), "เพชรที่มี "..tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text).." 💎")
+	TextLabelSet(Diamon_Count, 0.5, Color3.new(1, 1, 1), "")
 	
 	Time_Farm = Instance.new("TextLabel", ScreenGui)
 	TextLabelSet(Time_Farm, 0.7, Color3.new(1, 1, 1), "")
@@ -245,72 +300,17 @@ pcall(function()
 			if getgenv().Info_Script then
 				if getgenv().Info_Script.Start_Farming then
 					pcall(function()
-						diff = tonumber(os.time()) - tonumber(getgenv().Start_Farming)
+						diff = tonumber(os.time()) - tonumber(getgenv().Start_Farming) or Start_Farming_Time
 						h, m, s = formatTime(diff)
 						Time_Farm.Text = "⌛ "..h.." ชั่วโมง "..m.." นาที "..s.." วินาที"
+						Diamon_Count.Text = "เพชรที่มี "..tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text).." 💎"
 					end)
 				end
 			end
-			wait(1)
+			wait(0.1)
 		end
 	end)
 	
-end)
-
-Farm_Cound_Load, Joind_OldSer_Stats = 0, 0;
-if getgenv().Info_User then
-	Rejoid_Old_Server = false
-	if getgenv().Info_User.Uid_In_Old_Server then
-		Foud_Old_Player_Count = 0
-		for _,v in ipairs(getgenv().Info_User.Uid_In_Old_Server) do
-			for _,v2 in ipairs(game.Players:GetChildren()) do
-				if v2.UserId == v then
-					Foud_Old_Player_Count = Foud_Old_Player_Count + 1
-				end
-			end
-		end
-		if Foud_Old_Player_Count > ((#game.Players:GetChildren() - 1) / 2) then
-			task.spawn(function()
-				Rejoid_Old_Server = true
-				wait(1)
-				HopServer(l)
-				print("teleport Old Server")
-			end)
-		end
-	end
-	if getgenv().Info_User.Farm_Cound and Rejoid_Old_Server == false then
-		Farm_Cound_Load = tonumber(getgenv().Info_User.Farm_Cound) + 1
-		if Farm_Cound_Load >= 10 then
-			Farm_Cound_Load = 0
-			DiamondCount_label = plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count")
-			if DiamondCount_label then
-				sendWebhook(tonumber(DiamondCount_label.Text) or "Fail")
-			end
-		end
-		print("******************************** Farm Count "..Farm_Cound_Load)
-	end
-end
-
-task.spawn(function()
-	wait(0.2)
-	pcall(function()
-		Uid_In_Server = {}
-		for _,v in ipairs(game.Players:GetChildren()) do
-			if v ~= l then
-				table.insert(Uid_In_Server, v.UserId);
-			end
-		end
-		Info_User = {
-			Farm_Cound = Farm_Cound_Load,
-			Uid_In_Old_Server = Uid_In_Server
-		}
-		jsonData2 = HttpService:JSONEncode(Info_User)
-		queue_on_teleport([[
-      local HttpService = game:GetService("HttpService")
-      local Uid_In_Server = ']] .. jsonData2 .. [['
-      getgenv().Info_User = HttpService:JSONDecode(Uid_In_Server)
-    ]])
-	end)
 end)
 
 ReplicatedStorage = game:GetService("ReplicatedStorage")
