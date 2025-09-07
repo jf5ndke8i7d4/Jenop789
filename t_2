@@ -1,4 +1,4 @@
-repeat
+repeat--001
 	wait(1)
 until game:IsLoaded()
 
@@ -82,6 +82,65 @@ queue_on_teleport([[
 loadstring(game:HttpGet("https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_2"))()
 ]])
 
+local function TextLabelSet(TextLabel_Frame, X_Posi, Text_Color, Text)
+	TextLabel_Frame.Size = UDim2.new(0.81,0,0.1,0)
+	TextLabel_Frame.Position = UDim2.new(0.1,0,X_Posi,0)
+	TextLabel_Frame.BackgroundTransparency = 1
+	TextLabel_Frame.TextScaled = true
+	TextLabel_Frame.TextColor3 = Text_Color
+	TextLabel_Frame.RichText = true
+	TextLabel_Frame.Text = Text
+	TextLabel_Frame.Font = Enum.Font.Highway
+end
+
+pcall(function()
+
+	ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+
+	Dark_Frame = Instance.new("Frame", ScreenGui)
+
+	ScreenGui.Name = string.gsub(string.char(math.random(65,90),math.random(65,90))..math.random(1000,9999),"%s","");
+	ScreenGui.Enabled = true;-- เปิด / ปิด *
+
+	Dark_Frame.Size = UDim2.new(2,0,2,0);
+	Dark_Frame.Position = UDim2.new(-0.5,0,-0.5,0);
+	Dark_Frame.BackgroundColor3 = Color3.new(0.0235294, 0.0235294, 0.0235294);
+
+	Title = Instance.new("TextLabel", ScreenGui)
+	TextLabelSet(Title, 0.1, Color3.new(0.501961, 0.25098, 1), "Somtank")
+
+	Player_name = Instance.new("TextLabel", ScreenGui)
+	TextLabelSet(Player_name, 0.3, Color3.new(1, 1, 1), l.DisplayName)
+
+	Diamon_Count = Instance.new("TextLabel", ScreenGui)
+	TextLabelSet(Diamon_Count, 0.5, Color3.new(1, 1, 1), "")
+
+	Time_Farm = Instance.new("TextLabel", ScreenGui)
+	TextLabelSet(Time_Farm, 0.7, Color3.new(1, 1, 1), "")
+
+	task.spawn(function()
+		local function formatTime(seconds)
+			local hours = math.floor(seconds / 3600)
+			local minutes = math.floor((seconds % 3600) / 60)
+			local secs = seconds % 60
+			return hours, minutes, secs
+		end
+		while true do
+			if getgenv().Info_Script then
+				if getgenv().Info_Script.Start_Farming then
+					pcall(function()
+						diff = tonumber(os.time()) - tonumber(getgenv().Info_Script.Start_Farming)
+						h, m, s = formatTime(diff)
+						Time_Farm.Text = "⌛ "..h.." ชั่วโมง "..m.." นาที "..s.." วินาที"
+						Diamon_Count.Text = "เพชรที่มี "..tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text).." 💎"
+					end)
+				end
+			end
+			wait(0.1)
+		end
+	end)
+
+end)
 
 repeat_stuc_count, Lobby_Id = 0, tonumber(79546208627805);
 TeleportService = game:GetService("TeleportService");
@@ -204,13 +263,6 @@ repeat
 	end
 until l.Character and l.Character:FindFirstChild("HumanoidRootPart") and l.Character:FindFirstChild("Humanoid") 
 
-local function formatTime(seconds)
-	local hours = math.floor(seconds / 3600)
-	local minutes = math.floor((seconds % 3600) / 60)
-	local secs = seconds % 60
-	return hours, minutes, secs
-end
-
 ch = game.Players.LocalPlayer.Character;
 hu = ch:FindFirstChild("Humanoid");
 hmn = ch:FindFirstChild("HumanoidRootPart");
@@ -258,60 +310,6 @@ local function sendWebhook(Diamon_Count)
 		})
 	end
 end
-
-local function TextLabelSet(TextLabel_Frame, X_Posi, Text_Color, Text)
-	TextLabel_Frame.Size = UDim2.new(0.81,0,0.1,0)
-	TextLabel_Frame.Position = UDim2.new(0.1,0,X_Posi,0)
-	TextLabel_Frame.BackgroundTransparency = 1
-	TextLabel_Frame.TextScaled = true
-	TextLabel_Frame.TextColor3 = Text_Color
-	TextLabel_Frame.RichText = true
-	TextLabel_Frame.Text = Text
-	TextLabel_Frame.Font = Enum.Font.Highway
-end
-
-pcall(function()
-	
-	ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-	
-	Dark_Frame = Instance.new("Frame", ScreenGui)
-	
-	ScreenGui.Name = string.gsub(string.char(math.random(65,90),math.random(65,90))..math.random(1000,9999),"%s","");
-	ScreenGui.Enabled = true;-- เปิด / ปิด *
-
-	Dark_Frame.Size = UDim2.new(2,0,2,0);
-	Dark_Frame.Position = UDim2.new(-0.5,0,-0.5,0);
-	Dark_Frame.BackgroundColor3 = Color3.new(0.0235294, 0.0235294, 0.0235294);
-	
-	Title = Instance.new("TextLabel", ScreenGui)
-	TextLabelSet(Title, 0.1, Color3.new(0.501961, 0.25098, 1), "Somtank")
-	
-	Player_name = Instance.new("TextLabel", ScreenGui)
-	TextLabelSet(Player_name, 0.3, Color3.new(1, 1, 1), l.DisplayName)
-	
-	Diamon_Count = Instance.new("TextLabel", ScreenGui)
-	TextLabelSet(Diamon_Count, 0.5, Color3.new(1, 1, 1), "")
-	
-	Time_Farm = Instance.new("TextLabel", ScreenGui)
-	TextLabelSet(Time_Farm, 0.7, Color3.new(1, 1, 1), "")
-	
-	task.spawn(function()
-		while true do
-			if getgenv().Info_Script then
-				if getgenv().Info_Script.Start_Farming then
-					pcall(function()
-						diff = tonumber(os.time()) - tonumber(getgenv().Start_Farming) or Start_Farming_Time
-						h, m, s = formatTime(diff)
-						Time_Farm.Text = "⌛ "..h.." ชั่วโมง "..m.." นาที "..s.." วินาที"
-						Diamon_Count.Text = "เพชรที่มี "..tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text).." 💎"
-					end)
-				end
-			end
-			wait(0.1)
-		end
-	end)
-	
-end)
 
 ReplicatedStorage = game:GetService("ReplicatedStorage")
 RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
