@@ -23,9 +23,16 @@ Info_Script = {
 	Start_Farming = Start_Farming_Time
 }
 UserInfo = HttpService:JSONEncode(Info_Script)
+DC_Webhook = nil
+if getgenv().Webhook then
+	DC_Webhook = getgenv().Webhook
+else
+	DC_Webhook = "Hello"
+end
 queue_on_teleport([[
  local HttpService = game:GetService("HttpService")
  local Uid_In_Server = ']] .. UserInfo .. [['
+ getgenv().Webhook = ']] .. DC_Webhook .. [['
  getgenv().Info_Script = HttpService:JSONDecode(Uid_In_Server)
  loadstring(game:HttpGet("https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_1"))()
 ]])
