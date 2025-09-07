@@ -1,10 +1,11 @@
-repeat--001
+repeat--004
 	wait(1)
 until game:IsLoaded()
 
 if getgenv().RunScript == true then	return end; getgenv().RunScript = true;
 repeat wait(0.1) until game.Players
 l = game.Players.LocalPlayer;
+plrGUI = l.PlayerGui;
 HttpService = game:GetService("HttpService");
 
 Start_Farming_Time = tonumber(os.time())
@@ -19,138 +20,11 @@ Info_Script = {
 	Start_Farming = Start_Farming_Time
 }
 UserInfo = HttpService:JSONEncode(Info_Script)
-
-Farm_Cound_Load, Joind_OldSer_Stats = 0, 0;
-if getgenv().Info_User then
-	Rejoid_Old_Server = false
-	if getgenv().Info_User.Uid_In_Old_Server then
-		Foud_Old_Player_Count = 0
-		for _,v in ipairs(getgenv().Info_User.Uid_In_Old_Server) do
-			for _,v2 in ipairs(game.Players:GetChildren()) do
-				if v2.UserId == v then
-					Foud_Old_Player_Count = Foud_Old_Player_Count + 1
-				end
-			end
-		end
-		if Foud_Old_Player_Count > ((#game.Players:GetChildren() - 1) / 2) then
-			task.spawn(function()
-				Rejoid_Old_Server = true
-				wait(0.5)
-				HopServer(l)
-				print("teleport Old Server")
-			end)
-		end
-	end
-	if getgenv().Info_User.Farm_Cound and Rejoid_Old_Server == false then
-		Farm_Cound_Load = tonumber(getgenv().Info_User.Farm_Cound) + 1
-		if Farm_Cound_Load >= 10 then
-			Farm_Cound_Load = 0
-			DiamondCount_label = plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count")
-			if DiamondCount_label then
-				sendWebhook(tonumber(DiamondCount_label.Text) or "Fail")
-			end
-		end
-		print("******************************** Farm Count "..Farm_Cound_Load)
-	end
-end
-
-task.spawn(function()
-	pcall(function()
-		Uid_In_Server = {}
-		for _,v in ipairs(game.Players:GetChildren()) do
-			if v ~= l then
-				table.insert(Uid_In_Server, v.UserId);
-			end
-		end
-		Info_User = {
-			Farm_Cound = Farm_Cound_Load,
-			Uid_In_Old_Server = Uid_In_Server
-		}
-		jsonData2 = HttpService:JSONEncode(Info_User)
-		queue_on_teleport([[
-      local HttpService = game:GetService("HttpService")
-      local Uid_In_Server = ']] .. jsonData2 .. [['
-      getgenv().Info_User = HttpService:JSONDecode(Uid_In_Server)
-    ]])
-	end)
-end)
-
-queue_on_teleport([[
- local HttpService = game:GetService("HttpService")
- local Uid_In_Server = ']] .. UserInfo .. [['
- getgenv().Info_Script = HttpService:JSONDecode(Uid_In_Server)
-loadstring(game:HttpGet("https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_3"))()
-]])
-
-local function TextLabelSet(TextLabel_Frame, X_Posi, Text_Color, Text)
-	TextLabel_Frame.Size = UDim2.new(0.81,0,0.1,0)
-	TextLabel_Frame.Position = UDim2.new(0.1,0,X_Posi,0)
-	TextLabel_Frame.BackgroundTransparency = 1
-	TextLabel_Frame.TextScaled = true
-	TextLabel_Frame.TextColor3 = Text_Color
-	TextLabel_Frame.RichText = true
-	TextLabel_Frame.Text = Text
-	TextLabel_Frame.Font = Enum.Font.Highway
-end
-
-pcall(function()
-
-	ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-
-	Dark_Frame = Instance.new("Frame", ScreenGui)
-
-	ScreenGui.Name = string.gsub(string.char(math.random(65,90),math.random(65,90))..math.random(1000,9999),"%s","");
-	ScreenGui.Enabled = true;-- เปิด / ปิด *
-
-	Dark_Frame.Size = UDim2.new(2,0,2,0);
-	Dark_Frame.Position = UDim2.new(-0.5,0,-0.5,0);
-	Dark_Frame.BackgroundColor3 = Color3.new(0.0235294, 0.0235294, 0.0235294);
-
-	Title = Instance.new("TextLabel", ScreenGui)
-	TextLabelSet(Title, 0.1, Color3.new(0.501961, 0.25098, 1), "Somtank")
-
-	Player_name = Instance.new("TextLabel", ScreenGui)
-	TextLabelSet(Player_name, 0.3, Color3.new(1, 1, 1), l.DisplayName)
-
-	Diamon_Count = Instance.new("TextLabel", ScreenGui)
-	TextLabelSet(Diamon_Count, 0.5, Color3.new(1, 1, 1), "")
-
-	Time_Farm = Instance.new("TextLabel", ScreenGui)
-	TextLabelSet(Time_Farm, 0.7, Color3.new(1, 0.890196, 0.501961), "")
-
-	task.spawn(function()
-		local function formatTime(seconds)
-			local hours = math.floor(seconds / 3600)
-			local minutes = math.floor((seconds % 3600) / 60)
-			local secs = seconds % 60
-			return hours, minutes, secs
-		end
-		while true do
-			if getgenv().Info_Script then
-				if getgenv().Info_Script.Start_Farming then
-					pcall(function()
-						Diamon_Value = tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text)
-						if Diamon_Value == 0 then
-							Diamon_Value = "-"
-						end
-						diff = tonumber(os.time()) - tonumber(getgenv().Info_Script.Start_Farming)
-						h, m, s = formatTime(diff)
-						Time_Farm.Text = "⌛ "..h.." ชั่วโมง "..m.." นาที "..s.." วินาที"
-						Diamon_Count.Text = "เพชรที่มี "..Diamon_Value.." 💎"
-					end)
-				end
-			end
-			wait(0.3)
-		end
-	end)
-
-end)
-
-repeat_stuc_count, Lobby_Id = 0, tonumber(79546208627805);
-TeleportService = game:GetService("TeleportService");
-Players = game:GetService("Players");
-
+Start_Diamon_Value = tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text) or 0
 local function HopServer(player)
+	TeleportService = game:GetService("TeleportService");
+	Players = game:GetService("Players");
+	Lobby_Id = tonumber(79546208627805)
 	local function hopToLowPopServer()
 		local success, servers = pcall(function()
 			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. Lobby_Id .. "/servers/Public?sortOrder=Asc&limit=100"))
@@ -242,6 +116,128 @@ local function HopServer(player)
 	end
 	hopToLowPopServer()
 end
+task.spawn(function()
+	repeat
+		Start_Diamon_Value = tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text) or 0
+		wait(0.1)
+	until Start_Diamon_Value ~= 0
+end)
+Joind_OldSer_Stats = 0;
+if getgenv().Info_User then
+	Rejoid_Old_Server = false
+	if getgenv().Info_User.Uid_In_Old_Server then
+		Foud_Old_Player_Count = 0
+		for _,v in ipairs(getgenv().Info_User.Uid_In_Old_Server) do
+			for _,v2 in ipairs(game.Players:GetChildren()) do
+				if v2.UserId == v then
+					Foud_Old_Player_Count = Foud_Old_Player_Count + 1
+				end
+			end
+		end
+		if Foud_Old_Player_Count > ((#game.Players:GetChildren() - 1) / 2) then
+			task.spawn(function()
+				Rejoid_Old_Server = true
+				wait(0.5)
+				HopServer(l)
+				print("teleport Old Server")
+				wait(10)
+			end)
+		end
+	end
+end
+
+task.spawn(function()
+	pcall(function()
+		Uid_In_Server = {}
+		for _,v in ipairs(game.Players:GetChildren()) do
+			if v ~= l then
+				table.insert(Uid_In_Server, v.UserId);
+			end
+		end
+		Info_User = {
+			Uid_In_Old_Server = Uid_In_Server
+		}
+		jsonData2 = HttpService:JSONEncode(Info_User)
+		queue_on_teleport([[
+      local HttpService = game:GetService("HttpService")
+      local Uid_In_Server = ']] .. jsonData2 .. [['
+      getgenv().Info_User = HttpService:JSONDecode(Uid_In_Server)
+    ]])
+	end)
+end)
+
+queue_on_teleport([[
+ local HttpService = game:GetService("HttpService")
+ local Uid_In_Server = ']] .. UserInfo .. [['
+ getgenv().Info_Script = HttpService:JSONDecode(Uid_In_Server)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_3"))()
+]])
+
+local function TextLabelSet(TextLabel_Frame, X_Posi, Text_Color, Text)
+	TextLabel_Frame.Size = UDim2.new(0.81,0,0.1,0)
+	TextLabel_Frame.Position = UDim2.new(0.1,0,X_Posi,0)
+	TextLabel_Frame.BackgroundTransparency = 1
+	TextLabel_Frame.TextScaled = true
+	TextLabel_Frame.TextColor3 = Text_Color
+	TextLabel_Frame.RichText = true
+	TextLabel_Frame.Text = Text
+	TextLabel_Frame.Font = Enum.Font.Highway
+end
+
+pcall(function()
+
+	ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+
+	Dark_Frame = Instance.new("Frame", ScreenGui)
+
+	ScreenGui.Name = string.gsub(string.char(math.random(65,90),math.random(65,90))..math.random(1000,9999),"%s","");
+	ScreenGui.Enabled = true;-- เปิด / ปิด *
+
+	Dark_Frame.Size = UDim2.new(2,0,2,0);
+	Dark_Frame.Position = UDim2.new(-0.5,0,-0.5,0);
+	Dark_Frame.BackgroundColor3 = Color3.new(0.0235294, 0.0235294, 0.0235294);
+
+	Title = Instance.new("TextLabel", ScreenGui)
+	TextLabelSet(Title, 0.1, Color3.new(0.501961, 0.25098, 1), "Somtank")
+
+	Player_name = Instance.new("TextLabel", ScreenGui)
+	TextLabelSet(Player_name, 0.3, Color3.new(1, 1, 1), l.DisplayName)
+
+	Diamon_Count = Instance.new("TextLabel", ScreenGui)
+	TextLabelSet(Diamon_Count, 0.5, Color3.new(1, 1, 1), "")
+
+	Time_Farm = Instance.new("TextLabel", ScreenGui)
+	TextLabelSet(Time_Farm, 0.7, Color3.new(1, 0.890196, 0.501961), "")
+
+	task.spawn(function()
+		local function formatTime(seconds)
+			local hours = math.floor(seconds / 3600)
+			local minutes = math.floor((seconds % 3600) / 60)
+			local secs = seconds % 60
+			return hours, minutes, secs
+		end
+		while true do
+			if getgenv().Info_Script then
+				if getgenv().Info_Script.Start_Farming then
+					pcall(function()
+						Diamon_Value = tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text)
+						if Diamon_Value == 0 then
+							Diamon_Value = "-"
+						end
+						diff = tonumber(os.time()) - tonumber(getgenv().Info_Script.Start_Farming)
+						h, m, s = formatTime(diff)
+						Time_Farm.Text = "⌛ "..h.." ชั่วโมง "..m.." นาที "..s.." วินาที"
+						Diamon_Count.Text = "เพชรที่มี "..Diamon_Value.." 💎"
+					end)
+				end
+			end
+			wait(0.3)
+		end
+	end)
+
+end)
+
+repeat_stuc_count = 0;
 
 repeat
 	wait(0.1)
@@ -251,10 +247,10 @@ repeat
 		wait(1)
 		game:GetService("TeleportService"):Teleport(126509999114328)
 		print("teleport 1")
+		wait(10)
 	end
 until game.Players.LocalPlayer.Character
 
-plrGUI = l.PlayerGui;
 TimeWaitLoadGame = 0;
 
 repeat
@@ -264,6 +260,7 @@ repeat
 		wait(1)
 		game:GetService("TeleportService"):Teleport(126509999114328)
 		print("teleport 2")
+		wait(10)
 	end
 until l.Character and l.Character:FindFirstChild("HumanoidRootPart") and l.Character:FindFirstChild("Humanoid") 
 
@@ -285,6 +282,7 @@ task.spawn(function()
 			wait(1)
 			game:GetService("TeleportService"):Teleport(126509999114328)
 			print("teleport 3")
+			wait(10)
 		end
 		LastPosition = hmn.Position
 	end
@@ -296,7 +294,7 @@ local function sendWebhook(Diamon_Count)
 		["description"] = 
 			"**ผู้เล่น:** `" .. l.Name .. "`\n" ..
 			"**เพชร:** `" .. Diamon_Count .. "💎`",
-		["color"] = tonumber(0xFF0000),
+		["color"] = tonumber(0xCBA0E3),
 		["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
 	}
 	data = {
@@ -364,4 +362,9 @@ for _, Model in ipairs(workspace.Items:GetChildren()) do
 end
 wait(1)
 game:GetService("TeleportService"):Teleport(126509999114328)
+End_Diamon_Value = tonumber(plrGUI:WaitForChild("Interface"):WaitForChild("DiamondCount"):FindFirstChild("Count").Text) or 0
+if Start_Diamon_Value ~= 0 and End_Diamon_Value > Start_Diamon_Value then
+	sendWebhook(End_Diamon_Value)
+end
 print("teleport 4")
+wait(10)
