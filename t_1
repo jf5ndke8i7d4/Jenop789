@@ -1,9 +1,12 @@
-repeat--456456
+repeat
 	wait(1)
 until game:IsLoaded()
 
-if getgenv().RunScript == true then	return end; getgenv().RunScript = true;
+if getgenv().RunScript == true then	return end
+getgenv().RunScript = true
+
 repeat wait(0.1) until game.Players
+
 l = game.Players.LocalPlayer;
 plrGUI = l.PlayerGui;
 HttpService = game:GetService("HttpService");
@@ -24,7 +27,7 @@ queue_on_teleport([[
  local HttpService = game:GetService("HttpService")
  local Uid_In_Server = ']] .. UserInfo .. [['
  getgenv().Info_Script = HttpService:JSONDecode(Uid_In_Server)
-loadstring(game:HttpGet("https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_1"))()
+ loadstring(game:HttpGet("https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_1"))()
 ]])
 local function HopServer(player)
 	TeleportService = game:GetService("TeleportService");
@@ -139,7 +142,7 @@ if getgenv().Info_User then
 				wait(0.5)
 				HopServer(l)
 				print("teleport Old Server")
-				wait(10)
+				wait(1000)
 			end)
 		end
 	end
@@ -239,7 +242,7 @@ repeat
 		wait(1)
 		game:GetService("TeleportService"):Teleport(126509999114328)
 		print("teleport 1")
-		wait(10)
+		wait(1000)
 	end
 until game.Players.LocalPlayer.Character
 
@@ -252,7 +255,7 @@ repeat
 		wait(1)
 		game:GetService("TeleportService"):Teleport(126509999114328)
 		print("teleport 2")
-		wait(10)
+		wait(1000)
 	end
 until l.Character and l.Character:FindFirstChild("HumanoidRootPart") and l.Character:FindFirstChild("Humanoid") 
 
@@ -274,7 +277,7 @@ task.spawn(function()
 			wait(1)
 			game:GetService("TeleportService"):Teleport(126509999114328)
 			print("teleport 3")
-			wait(10)
+			wait(1000)
 		end
 		LastPosition = hmn.Position
 	end
@@ -297,7 +300,7 @@ local function sendWebhook(Diamon_Count)
 	jsonData_POST = HttpService:JSONEncode(data)
 	if http_request then
 		http_request({
-			Url = "https://discord.com/api/webhooks/1378634865796317326/jzRjm7lmUsT5w79Py1ryr2AxQ8UNIf6pbu07h-mR9_n8R4-kmvEIQ_pytguKSYdCQQ7F",
+			Url = getgenv().Webhook or nil,
 			Method = "POST",
 			Headers = {["Content-Type"] = "application/json"},
 			Body = jsonData_POST
@@ -358,4 +361,4 @@ if getgenv().Diamon_Count_Value then
 end
 queue_on_teleport([[getgenv().Diamon_Count_Value = ']] .. End_Diamon_Value .. [[']])
 print("teleport 4")
-wait(10)
+wait(1000)
