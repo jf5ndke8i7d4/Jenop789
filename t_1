@@ -3,15 +3,31 @@ repeat
 until game:IsLoaded()
 
 if getgenv().RunScript == true then	return end; getgenv().RunScript = true;
+HttpService = game:GetService("HttpService");
+
+Start_Farming_Time = tonumber(os.time())
+if getgenv().Info_Script then
+	if getgenv().Info_Script.Start_Farming then
+		Start_Farming_Time = getgenv().Start_Farming
+	else
+		Start_Farming_Time = tonumber(os.time())
+	end
+end
+Info_Script = {
+	Start_Farming = Start_Farming_Time
+}
+UserInfo = HttpService:JSONEncode(Info_Script)
 
 queue_on_teleport([[
+ local HttpService = game:GetService("HttpService")
+ local Uid_In_Server = ']] .. UserInfo .. [['
+ getgenv().Info_Script = HttpService:JSONDecode(Uid_In_Server)
 loadstring(game:HttpGet("https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_1"))()
 ]])
 
 repeat wait(0.1) until game.Players
 
 repeat_stuc_count, Lobby_Id = 0, tonumber(79546208627805);
-HttpService = game:GetService("HttpService");
 TeleportService = game:GetService("TeleportService");
 Players = game:GetService("Players");
 
@@ -174,13 +190,13 @@ local function sendWebhook(Diamon_Count)
 		["avatar_url"] = "https://media.discordapp.net/attachments/1367059030274609183/1412413636131033159/IconNew.jpg?ex=68b83434&is=68b6e2b4&hm=f2413ea4327ecfbb8c9357ac2f447bac0f97dc11bb1ce65e11241af520348711&=&format=webp&width=656&height=656",
 		["embeds"] = {embed}
 	}
-	jsonData = HttpService:JSONEncode(data)
+	jsonData_POST = HttpService:JSONEncode(data)
 	if http_request then
 		http_request({
 			Url = "https://discord.com/api/webhooks/1378634865796317326/jzRjm7lmUsT5w79Py1ryr2AxQ8UNIf6pbu07h-mR9_n8R4-kmvEIQ_pytguKSYdCQQ7F",
 			Method = "POST",
 			Headers = {["Content-Type"] = "application/json"},
-			Body = jsonData
+			Body = jsonData_POST
 		})
 	end
 end
@@ -223,10 +239,10 @@ pcall(function()
 	
 	task.spawn(function()
 		while true do
-			if getgenv().Info_User then
-				if getgenv().Info_User.Start_Farming then
+			if getgenv().Info_Script then
+				if getgenv().Info_Script.Start_Farming then
 					pcall(function()
-						diff = tonumber(os.time()) - tonumber(getgenv().Info_User.Start_Farming)
+						diff = tonumber(os.time()) - tonumber(getgenv().Start_Farming)
 						h, m, s = formatTime(diff)
 						Time_Farm.Text = "⌛ "..h.." ชั่วโมง "..m.." นาที "..s.." วินาที"
 					end)
@@ -274,14 +290,6 @@ end
 task.spawn(function()
 	wait(0.2)
 	pcall(function()
-		Start_Farming_Time = tonumber(os.time())
-		if getgenv().Info_User then
-			if getgenv().Info_User.Start_Farming then
-				Start_Farming_Time = getgenv().Info_User.Start_Farming
-			else
-				Start_Farming_Time = tonumber(os.time())
-			end
-		end
 		Uid_In_Server = {}
 		for _,v in ipairs(game.Players:GetChildren()) do
 			if v ~= l then
@@ -290,13 +298,12 @@ task.spawn(function()
 		end
 		Info_User = {
 			Farm_Cound = Farm_Cound_Load,
-			Uid_In_Old_Server = Uid_In_Server,
-			Start_Farming = Start_Farming_Time
+			Uid_In_Old_Server = Uid_In_Server
 		}
-		jsonData = HttpService:JSONEncode(Info_User)
+		jsonData2 = HttpService:JSONEncode(Info_User)
 		queue_on_teleport([[
       local HttpService = game:GetService("HttpService")
-      local Uid_In_Server = ']] .. jsonData .. [['
+      local Uid_In_Server = ']] .. jsonData2 .. [['
       getgenv().Info_User = HttpService:JSONDecode(Uid_In_Server)
     ]])
 	end)
