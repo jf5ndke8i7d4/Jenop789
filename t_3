@@ -11,6 +11,15 @@ l = game.Players.LocalPlayer;
 plrGUI = l.PlayerGui;
 HttpService = game:GetService("HttpService");
 
+task.spawn(function()
+	while true do
+		pcall(function()
+			game.Players.LocalPlayer.GameplayPaused = false
+		end)
+		task.wait()
+	end
+end)
+
 Start_Farming_Time = tonumber(os.time())
 if getgenv().Info_Script then
 	if getgenv().Info_Script.Start_Farming then
@@ -26,7 +35,10 @@ UserInfo = HttpService:JSONEncode(Info_Script)
 DC_Webhook = nil
 if getgenv().Webhook then
 	DC_Webhook = getgenv().Webhook
+else
+	DC_Webhook = ""
 end
+
 queue_on_teleport([[
  local HttpService = game:GetService("HttpService")
  local Uid_In_Server = ']] .. UserInfo .. [['
@@ -34,9 +46,48 @@ queue_on_teleport([[
  getgenv().Info_Script = HttpService:JSONDecode(Uid_In_Server)
  loadstring(game:HttpGet("https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_3"))()
 ]])
+if tonumber(game.PlaceId) == tonumber(79546208627805) then
+	--game:GetService("Players").LocalPlayer.PlayerGui.Interface.EntryScreen
+	--game:GetService("Players").LocalPlayer.PlayerGui.Interface.LobbyCreate.ButtonList.Button1
+	--game:GetService("Players").LocalPlayer.PlayerGui.Interface.LobbyCreate.HeaderFrame.CreateButton
+	EntryScreen = plrGUI:WaitForChild("Interface"):WaitForChild("EntryScreen")
+	LobbyCreate = plrGUI:WaitForChild("Interface"):WaitForChild("LobbyCreate")
+	Button1 = LobbyCreate:WaitForChild("ButtonList"):WaitForChild("Button1")
+	CreateButton = LobbyCreate:WaitForChild("HeaderFrame"):WaitForChild("CreateButton")
+	
+	ch = l.Character;
+	hmn = ch:FindFirstChild("HumanoidRootPart")
+	GetRoom = false
+	
+	for i=1,3 do
+		if workspace:FindFirstChild("Teleporter"..i) and not GetRoom then
+			Teleporter_Model = workspace:FindFirstChild("Teleporter"..i)
+			BillboardHolder = Teleporter_Model:WaitForChild("BillboardHolder"):WaitForChild("BillboardGui"):WaitForChild("Players")
+			--workspace.Teleporter1.BillboardHolder.BillboardGui.Players			
+			for _,item in ipairs(Teleporter_Model:GetChildren()) do
+				if BillboardHolder.Text == "0/5" and not GetRoom then
+					if item:IsA("BasePart") and item.Name == "EnterPart" then
+						firetouchinterest(hmn, Teleporter_Model, true)
+						wait(0.3)
+						firetouchinterest(hmn, Teleporter_Model, false)
+					end
+				end
+				wait(0.2)
+				if LobbyCreate.Visible == false then
+					GetRoom = true
+				end
+			end
+		end
+	end
+	EntryScreen.Visible = false
+	firesignal(Button1.MouseButton1Click)
+	wait(0.5)
+	firesignal(CreateButton.MouseButton1Click)
+	wait(10)
+end
 local function HopServer(player)
-	TeleportService = game:GetService("TeleportService");
-	Players = game:GetService("Players");
+	TeleportService = game:GetService("TeleportService")
+	Players = game:GetService("Players")
 	Lobby_Id = tonumber(79546208627805)
 	local function hopToLowPopServer()
 		local success, servers = pcall(function()
@@ -147,7 +198,7 @@ if getgenv().Info_User then
 				wait(0.5)
 				HopServer(l)
 				print("teleport Old Server")
-				wait(1000)
+				wait(10)
 			end)
 		end
 	end
@@ -173,8 +224,13 @@ task.spawn(function()
 	end)
 end)
 
-local function TextLabelSet(TextLabel_Frame, X_Posi, Text_Color, Text)
-	TextLabel_Frame.Size = UDim2.new(0.81,0,0.1,0)
+local function TextLabelSet(TextLabel_Frame, X_Posi, Text_Color, Text, Istitle)
+	if Istitle then
+		Istitle = UDim2.new(0.81,0,0.15,0)
+	else
+		Istitle = UDim2.new(0.81,0,0.1,0)
+	end
+	TextLabel_Frame.Size = Istitle
 	TextLabel_Frame.Position = UDim2.new(0.1,0,X_Posi,0)
 	TextLabel_Frame.BackgroundTransparency = 1
 	TextLabel_Frame.TextScaled = true
@@ -187,7 +243,6 @@ end
 pcall(function()
 
 	ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-
 	Dark_Frame = Instance.new("Frame", ScreenGui)
 
 	ScreenGui.Name = string.gsub(string.char(math.random(65,90),math.random(65,90))..math.random(1000,9999),"%s","");
@@ -196,9 +251,10 @@ pcall(function()
 	Dark_Frame.Size = UDim2.new(2,0,2,0);
 	Dark_Frame.Position = UDim2.new(-0.5,0,-0.5,0);
 	Dark_Frame.BackgroundColor3 = Color3.new(0.0235294, 0.0235294, 0.0235294);
+	Dark_Frame.BackgroundTransparency = 0.5
 
 	Title = Instance.new("TextLabel", ScreenGui)
-	TextLabelSet(Title, 0.1, Color3.new(0.501961, 0.25098, 1), "Somtank")
+	TextLabelSet(Title, 0.1, Color3.new(0.501961, 0.25098, 1), "Somtank Script", true)
 
 	Player_name = Instance.new("TextLabel", ScreenGui)
 	TextLabelSet(Player_name, 0.3, Color3.new(1, 1, 1), l.DisplayName)
@@ -245,14 +301,12 @@ repeat
 		repeat_stuc_count = repeat_stuc_count + 0.1
 	else
 		wait(1)
-		game:GetService("TeleportService"):Teleport(126509999114328)
+		game:GetService("TeleportService"):Teleport(126509999114328, game.Players.LocalPlayer)
 		print("teleport 1")
-		wait(1000)
+		wait(10)
 	end
 until game.Players.LocalPlayer.Character
-
 TimeWaitLoadGame = 0;
-
 repeat
 	wait(0.1)
 	TimeWaitLoadGame = TimeWaitLoadGame + 0.1
@@ -260,11 +314,11 @@ repeat
 		wait(1)
 		game:GetService("TeleportService"):Teleport(126509999114328)
 		print("teleport 2")
-		wait(1000)
+		wait(10)
 	end
 until l.Character and l.Character:FindFirstChild("HumanoidRootPart") and l.Character:FindFirstChild("Humanoid") 
 
-ch = game.Players.LocalPlayer.Character;
+ch = l.Character;
 hu = ch:FindFirstChild("Humanoid");
 hmn = ch:FindFirstChild("HumanoidRootPart");
 cam = workspace.CurrentCamera;
@@ -277,12 +331,11 @@ task.spawn(function()
 		if Dis_Pl < 5 then
 			Stuck_Count = Stuck_Count + 1
 		end
-		print("OutTick "..OutTick)
 		if OutTick >= 25 or Stuck_Count > 2 or l:GetAttribute("HasDied") == true then
 			wait(1)
 			game:GetService("TeleportService"):Teleport(126509999114328)
 			print("teleport 3")
-			wait(1000)
+			wait(10)
 		end
 		LastPosition = hmn.Position
 	end
@@ -366,4 +419,4 @@ if getgenv().Diamon_Count_Value then
 end
 queue_on_teleport([[getgenv().Diamon_Count_Value = ']] .. End_Diamon_Value .. [[']])
 print("teleport 4")
-wait(1000)
+wait(10)
