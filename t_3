@@ -2,7 +2,57 @@ repeat
 	wait(1)
 until game:IsLoaded()
 
-if getgenv().RunScript == true then	return end
+local EXPECTED_URL = "https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_3"
+getgenv()._SomtankValidated = {
+	ok = false,
+	hash = nil
+}
+local validateKeySystem = newcclosure(function()
+	if not getgenv().SOMTANK_KEY then
+		return warn("Unauthorized! Must pass key system first.")
+	end
+	local info = rawget(getgenv(), "_SomtankMarker")
+	if type(info) ~= "table"
+		or info.url ~= "Somtank_DiamondFarm"
+		or typeof(info.token) ~= "Instance"
+		or info.sourceUrl ~= EXPECTED_URL
+		or not info.hash
+		or not info.salt then
+		return warn("Invalid loader info or unauthorized source!")
+	end
+	local ok, source = pcall(function()
+		return game:HttpGet(EXPECTED_URL)
+	end)
+	if not ok or not source then
+		return warn("Failed to fetch script source")
+	end
+	local currentHash = crypt.hash(source .. info.salt, "sha384")
+	if currentHash ~= info.hash then
+		return warn("Script hash mismatch (salted), possible tampering")
+	end
+	getgenv()._SomtankValidated.ok = true
+	getgenv()._SomtankValidated.hash = info.hash
+	pcall(function()
+		getgenv()._SomtankMarker = nil
+		getgenv().SOMTANK_KEY = false
+	end)
+end)
+validateKeySystem()
+local function prettyAssert(cond, msg)
+	if cond then return true end
+	xpcall(function()
+		error(msg, 0) 
+	end, function(err)
+		warn("❌ Assertion Failed!")
+		warn("Message: " .. tostring(err))
+	end)
+	return false
+end
+if not prettyAssert(getgenv()._SomtankValidated.ok, "Unauthorized! Must run through KeySystem first.") then
+	return
+end
+
+if getgenv().RunScript and getgenv().RunScript == true then	return end
 getgenv().RunScript = true--true / false
 
 repeat wait(0.1) until game.Players
@@ -44,140 +94,19 @@ queue_on_teleport([[
  local Uid_In_Server = ']] .. UserInfo .. [['
  getgenv().Webhook = ']] .. DC_Webhook .. [['
  getgenv().Info_Script = HttpService:JSONDecode(Uid_In_Server)
- loadstring(game:HttpGet("https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_3"))()
+ 
+ getgenv().SOMTANK_KEY = true
+ getgenv()._SomtankMarker = {
+	url = "Somtank_DiamondFarm",
+	token = Instance.new("Part"), 
+	sourceUrl = EXPECTED_URL,
+	salt = "Somtank_hash", 
+	hash = crypt.hash(game:HttpGet(EXPECTED_URL) .. "Somtank_hash", "sha384")
+ }
+ loadstring(game:HttpGet(']] .. EXPECTED_URL .. [['))()
 ]])
 local function HopServer(player)
-	local TeleportService = game:GetService("TeleportService")
-	local HttpService = game:GetService("HttpService")
-	local Players = game:GetService("Players")
-
-	local Lobby_Id = 79546208627805
-	local player = Players.LocalPlayer
-
-	-- ฟังก์ชันตรวจสอบว่า server ยังใช้งานได้หรือไม่
-	local function isServerValid(serverId, placeId)
-		local success, servers = pcall(function()
-			return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"))
-		end)
-
-		if not success or not servers or not servers.data then
-			return false
-		end
-
-		for _, server in pairs(servers.data) do
-			if server.id == serverId and server.playing < server.maxPlayers then
-				return true
-			end
-		end
-
-		return false
-	end
-
-	local function hopToRandomServer()
-		local maxAttempts = 10 -- จำนวนครั้งสูงสุดที่จะลอง
-
-		for mainAttempt = 1, maxAttempts do
-			print("พยายามหา server ครั้งที่ " .. mainAttempt)
-
-			local success, servers = pcall(function()
-				return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. Lobby_Id .. "/servers/Public?sortOrder=Asc&limit=100"))
-			end)
-
-			if not success or not servers or not servers.data then
-				warn("ไม่สามารถดึงข้อมูล server ได้ ครั้งที่ " .. mainAttempt)
-				if mainAttempt < maxAttempts then
-					wait(3) -- รอ 3 วินาทีก่อนลองใหม่
-					continue
-				else
-					return false
-				end
-			end
-
-			-- กรอง server ที่ใช้งานได้
-			local availableServers = {}
-			for _, server in pairs(servers.data) do
-				-- เพิ่มเงื่อนไขการกรอง server
-				if server.playing < server.maxPlayers 
-					and server.id ~= game.JobId 
-					and server.playing > 0  -- หลีกเลี่ยง server ว่าง (อาจมีปัญหา)
-					and server.maxPlayers > 1 then -- หลีกเลี่ยง private server
-					table.insert(availableServers, server)
-				end
-			end
-
-			if #availableServers > 0 then
-				-- เรียงลำดับตามจำนวนผู้เล่น (น้อยไปมาก)
-				table.sort(availableServers, function(a, b)
-					return a.playing < b.playing
-				end)
-
-				-- ลอง teleport กับ server หลายๆ ตัว
-				for i = 1, math.min(3, #availableServers) do
-					local targetServer = availableServers[i]
-
-					print("กำลังลอง teleport ไป server " .. i .. " (" .. targetServer.playing .. "/" .. targetServer.maxPlayers .. " คน)")
-
-					-- ตรวจสอบว่า server ยังใช้งานได้ก่อน teleport
-					if isServerValid(targetServer.id, Lobby_Id) then
-						-- ใช้ TeleportOptions เพื่อความเสถียร
-						local teleportOptions = Instance.new("TeleportOptions")
-						teleportOptions.ShouldReserveServer = false
-
-						local teleportSuccess, teleportError = pcall(function()
-							TeleportService:TeleportToPlaceInstance(Lobby_Id, targetServer.id, player, teleportOptions)
-						end)
-
-						if teleportSuccess then
-							print("เริ่ม teleport สำเร็จ!")
-							return true
-						else
-							warn("Teleport ล้มเหลว: " .. tostring(teleportError))
-							wait(1) -- รอสักหน่อยก่อนลองตัวถัดไป
-						end
-					else
-						warn("Server ไม่ถูกต้องแล้ว ข้ามไป")
-					end
-				end
-			else
-				warn("ไม่พบ server ที่ใช้งานได้ในครั้งที่ " .. mainAttempt)
-			end
-
-			if mainAttempt < maxAttempts then
-				wait(5) -- รอ 5 วินาทีก่อนลองหา server ใหม่
-			end
-		end
-
-		warn("ไม่สามารถ hop ได้หลังจากลอง " .. maxAttempts .. " ครั้ง")
-		return false
-	end
-
-	-- เพิ่ม error handling สำหรับ TeleportService
-	TeleportService.TeleportInitFailed:Connect(function(player, teleportResult, errorMessage)
-		warn("Teleport Init Failed: " .. tostring(errorMessage))
-		warn("Teleport Result: " .. tostring(teleportResult))
-
-		-- ลองใหม่หลังจาก 3 วินาที
-		wait(3)
-		hopToRandomServer()
-	end)
-
-	-- เรียกใช้ฟังก์ชัน
-	hopToRandomServer()
-end
-local function createLobby(size)
-	local chosenFunc
-	for i, func in ipairs(getgc(true)) do
-		if type(func) == "function" and islclosure(func) then
-			for _, c in ipairs(debug.getconstants(func)) do
-				if tostring(c) == "Chosen" then
-					chosenFunc = func
-				end
-			end
-		end
-	end
-	debug.setupvalue(chosenFunc, 2, size)
-	local selfTable = debug.getupvalue(chosenFunc, 1)
-	local ok, res = pcall(chosenFunc, selfTable)
+	game:GetService("TeleportService"):Teleport(79546208627805, game.Players.LocalPlayer)
 end
 if tonumber(game.PlaceId) == tonumber(79546208627805) then
 	EntryScreen = plrGUI:WaitForChild("Interface"):WaitForChild("EntryScreen")
@@ -185,7 +114,22 @@ if tonumber(game.PlaceId) == tonumber(79546208627805) then
 	CloseButton = plrGUI:WaitForChild("Interface"):WaitForChild("LobbyCreate"):WaitForChild("CloseButton")
 	Exit_Button = plrGUI:WaitForChild("TeleporterAssets"):WaitForChild("TextButton")
 		
-	l.CharacterAdded:Wait()
+	local function createLobby(size)
+		local chosenFunc
+		for i, func in ipairs(getgc(true)) do
+			if type(func) == "function" and islclosure(func) then
+				for _, c in ipairs(debug.getconstants(func)) do
+					if tostring(c) == "Chosen" then
+						chosenFunc = func
+					end
+				end
+			end
+		end
+		debug.setupvalue(chosenFunc, 2, size)
+		local selfTable = debug.getupvalue(chosenFunc, 1)
+		local ok, res = pcall(chosenFunc, selfTable)
+	end
+		
 	ch = l.Character;
 	hmn = ch:FindFirstChild("HumanoidRootPart")
 	GetRoom = false
@@ -374,7 +318,6 @@ repeat
 	end
 until l.Character and l.Character:FindFirstChild("HumanoidRootPart") and l.Character:FindFirstChild("Humanoid") 
 
-l.CharacterAdded:Wait()
 ch = l.Character;
 hu = ch:FindFirstChild("Humanoid");
 hmn = ch:FindFirstChild("HumanoidRootPart");
