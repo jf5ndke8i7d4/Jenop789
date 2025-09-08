@@ -2,7 +2,7 @@ repeat
 	wait(1)
 until game:IsLoaded()
 
-local Raw_GetKey_Authguard = "https://cdn.authguard.org/virtual-file/875272f41bf54219859c76b2a317733a"
+local Raw_GetKey_Authguard = "https://cdn.authguard.org/virtual-file/3225e38fb77149bfbee0abddc1010c65"
 local EXPECTED_URL = "https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_1"
 
 getgenv()._SomtankValidated = {
