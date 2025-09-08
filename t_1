@@ -96,7 +96,7 @@ queue_on_teleport([[
  local Uid_In_Server = ']] .. UserInfo .. [['
  getgenv().Webhook = ']] .. DC_Webhook .. [['
  getgenv().Info_Script = HttpService:JSONDecode(Uid_In_Server)
- loadstring(game:HttpGet(']] .. GetKey_Authguard .. [['))()
+ loadstring(game:HttpGet(']] .. Raw_GetKey_Authguard .. [['))()
 ]])
 local function HopServer(player)
 	game:GetService("TeleportService"):Teleport(79546208627805, game.Players.LocalPlayer)
