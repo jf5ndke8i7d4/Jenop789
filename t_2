@@ -1,3 +1,1076 @@
+task.spawn(function()
+    local a=2^32;local b=a-1;local function c(d,e)local f,g=0,1;while d~=0 or e~=0 do local h,i=d%2,e%2;local j=(h+i)%2;f=f+j*g;d=math.floor(d/2)e=math.floor(e/2)g=g*2 end;return f%a end;local function k(d,e,l,...)local m;if e then d=d%a;e=e%a;m=c(d,e)if l then m=k(m,l,...)end;return m elseif d then return d%a else return 0 end end;local function n(d,e,l,...)local m;if e then d=d%a;e=e%a;m=(d+e-c(d,e))/2;if l then m=n(m,l,...)end;return m elseif d then return d%a else return b end end;local function o(p)return b-p end;local function q(d,r)if r<0 then return lshift(d,-r)end;return math.floor(d%2^32/2^r)end;local function s(p,r)if r>31 or r<-31 then return 0 end;return q(p%a,r)end;local function lshift(d,r)if r<0 then return s(d,-r)end;return d*2^r%2^32 end;local function t(p,r)p=p%a;r=r%32;local u=n(p,2^r-1)return s(p,r)+lshift(u,32-r)end;local v={0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2}local function w(x)return string.gsub(x,".",function(l)return string.format("%02x",string.byte(l))end)end;local function y(z,A)local x=""for B=1,A do local C=z%256;x=string.char(C)..x;z=(z-C)/256 end;return x end;local function D(x,B)local A=0;for B=B,B+3 do A=A*256+string.byte(x,B)end;return A end;local function E(F,G)local H=64-(G+9)%64;G=y(8*G,8)F=F.."\128"..string.rep("\0",H)..G;assert(#F%64==0)return F end;local function I(J)J[1]=0x6a09e667;J[2]=0xbb67ae85;J[3]=0x3c6ef372;J[4]=0xa54ff53a;J[5]=0x510e527f;J[6]=0x9b05688c;J[7]=0x1f83d9ab;J[8]=0x5be0cd19;return J end;local function K(F,B,J)local L={}for M=1,16 do L[M]=D(F,B+(M-1)*4)end;for M=17,64 do local N=L[M-15]local O=k(t(N,7),t(N,18),s(N,3))N=L[M-2]L[M]=(L[M-16]+O+L[M-7]+k(t(N,17),t(N,19),s(N,10)))%a end;local d,e,l,P,Q,R,S,T=J[1],J[2],J[3],J[4],J[5],J[6],J[7],J[8]for B=1,64 do local O=k(t(d,2),t(d,13),t(d,22))local U=k(n(d,e),n(d,l),n(e,l))local V=(O+U)%a;local W=k(t(Q,6),t(Q,11),t(Q,25))local X=k(n(Q,R),n(o(Q),S))local Y=(T+W+X+v[B]+L[B])%a;T=S;S=R;R=Q;Q=(P+Y)%a;P=l;l=e;e=d;d=(Y+V)%a end;J[1]=(J[1]+d)%a;J[2]=(J[2]+e)%a;J[3]=(J[3]+l)%a;J[4]=(J[4]+P)%a;J[5]=(J[5]+Q)%a;J[6]=(J[6]+R)%a;J[7]=(J[7]+S)%a;J[8]=(J[8]+T)%a end;local function Z(F)F=E(F,#F)local J=I({})for B=1,#F,64 do K(F,B,J)end;return w(y(J[1],4)..y(J[2],4)..y(J[3],4)..y(J[4],4)..y(J[5],4)..y(J[6],4)..y(J[7],4)..y(J[8],4))end;local e;local l={["\\"]="\\",["\""]="\"",["\b"]="b",["\f"]="f",["\n"]="n",["\r"]="r",["\t"]="t"}local P={["/"]="/"}for Q,R in pairs(l)do P[R]=Q end;local S=function(T)return"\\"..(l[T]or string.format("u%04x",T:byte()))end;local B=function(M)return"null"end;local v=function(M,z)local _={}z=z or{}if z[M]then error("circular reference")end;z[M]=true;if rawget(M,1)~=nil or next(M)==nil then local A=0;for Q in pairs(M)do if type(Q)~="number"then error("invalid table: mixed or invalid key types")end;A=A+1 end;if A~=#M then error("invalid table: sparse array")end;for a0,R in ipairs(M)do table.insert(_,e(R,z))end;z[M]=nil;return"["..table.concat(_,",").."]"else for Q,R in pairs(M)do if type(Q)~="string"then error("invalid table: mixed or invalid key types")end;table.insert(_,e(Q,z)..":"..e(R,z))end;z[M]=nil;return"{"..table.concat(_,",").."}"end end;local g=function(M)return'"'..M:gsub('[%z\1-\31\\"]',S)..'"'end;local a1=function(M)if M~=M or M<=-math.huge or M>=math.huge then error("unexpected number value '"..tostring(M).."'")end;return string.format("%.14g",M)end;local j={["nil"]=B,["table"]=v,["string"]=g,["number"]=a1,["boolean"]=tostring}e=function(M,z)local x=type(M)local a2=j[x]if a2 then return a2(M,z)end;error("unexpected type '"..x.."'")end;local a3=function(M)return e(M)end;local a4;local N=function(...)local _={}for a0=1,select("#",...)do _[select(a0,...)]=true end;return _ end;local L=N(" ","\t","\r","\n")local p=N(" ","\t","\r","\n","]","}",",")local a5=N("\\","/",'"',"b","f","n","r","t","u")local m=N("true","false","null")local a6={["true"]=true,["false"]=false,["null"]=nil}local a7=function(a8,a9,aa,ab)for a0=a9,#a8 do if aa[a8:sub(a0,a0)]~=ab then return a0 end end;return#a8+1 end;local ac=function(a8,a9,J)local ad=1;local ae=1;for a0=1,a9-1 do ae=ae+1;if a8:sub(a0,a0)=="\n"then ad=ad+1;ae=1 end end;error(string.format("%s at line %d col %d",J,ad,ae))end;local af=function(A)local a2=math.floor;if A<=0x7f then return string.char(A)elseif A<=0x7ff then return string.char(a2(A/64)+192,A%64+128)elseif A<=0xffff then return string.char(a2(A/4096)+224,a2(A%4096/64)+128,A%64+128)elseif A<=0x10ffff then return string.char(a2(A/262144)+240,a2(A%262144/4096)+128,a2(A%4096/64)+128,A%64+128)end;error(string.format("invalid unicode codepoint '%x'",A))end;local ag=function(ah)local ai=tonumber(ah:sub(1,4),16)local aj=tonumber(ah:sub(7,10),16)if aj then return af((ai-0xd800)*0x400+aj-0xdc00+0x10000)else return af(ai)end end;local ak=function(a8,a0)local _=""local al=a0+1;local Q=al;while al<=#a8 do local am=a8:byte(al)if am<32 then ac(a8,al,"control character in string")elseif am==92 then _=_..a8:sub(Q,al-1)al=al+1;local T=a8:sub(al,al)if T=="u"then local an=a8:match("^[dD][89aAbB]%x%x\\u%x%x%x%x",al+1)or a8:match("^%x%x%x%x",al+1)or ac(a8,al-1,"invalid unicode escape in string")_=_..ag(an)al=al+#an else if not a5[T]then ac(a8,al-1,"invalid escape char '"..T.."' in string")end;_=_..P[T]end;Q=al+1 elseif am==34 then _=_..a8:sub(Q,al-1)return _,al+1 end;al=al+1 end;ac(a8,a0,"expected closing quote for string")end;local ao=function(a8,a0)local am=a7(a8,a0,p)local ah=a8:sub(a0,am-1)local A=tonumber(ah)if not A then ac(a8,a0,"invalid number '"..ah.."'")end;return A,am end;local ap=function(a8,a0)local am=a7(a8,a0,p)local aq=a8:sub(a0,am-1)if not m[aq]then ac(a8,a0,"invalid literal '"..aq.."'")end;return a6[aq],am end;local ar=function(a8,a0)local _={}local A=1;a0=a0+1;while 1 do local am;a0=a7(a8,a0,L,true)if a8:sub(a0,a0)=="]"then a0=a0+1;break end;am,a0=a4(a8,a0)_[A]=am;A=A+1;a0=a7(a8,a0,L,true)local as=a8:sub(a0,a0)a0=a0+1;if as=="]"then break end;if as~=","then ac(a8,a0,"expected ']' or ','")end end;return _,a0 end;local at=function(a8,a0)local _={}a0=a0+1;while 1 do local au,M;a0=a7(a8,a0,L,true)if a8:sub(a0,a0)=="}"then a0=a0+1;break end;if a8:sub(a0,a0)~='"'then ac(a8,a0,"expected string for key")end;au,a0=a4(a8,a0)a0=a7(a8,a0,L,true)if a8:sub(a0,a0)~=":"then ac(a8,a0,"expected ':' after key")end;a0=a7(a8,a0+1,L,true)M,a0=a4(a8,a0)_[au]=M;a0=a7(a8,a0,L,true)local as=a8:sub(a0,a0)a0=a0+1;if as=="}"then break end;if as~=","then ac(a8,a0,"expected '}' or ','")end end;return _,a0 end;local av={['"']=ak,["0"]=ao,["1"]=ao,["2"]=ao,["3"]=ao,["4"]=ao,["5"]=ao,["6"]=ao,["7"]=ao,["8"]=ao,["9"]=ao,["-"]=ao,["t"]=ap,["f"]=ap,["n"]=ap,["["]=ar,["{"]=at}a4=function(a8,a9)local as=a8:sub(a9,a9)local a2=av[as]if a2 then return a2(a8,a9)end;ac(a8,a9,"unexpected character '"..as.."'")end;local aw=function(a8)if type(a8)~="string"then error("expected argument of type string, got "..type(a8))end;local _,a9=a4(a8,a7(a8,1,L,true))a9=a7(a8,a9,L,true)if a9<=#a8 then ac(a8,a9,"trailing garbage")end;return _ end;
+end)
+
+fileName = "STKEY_99NightInTheForest_AutoFarm.txt"
+EexpireTime_Key = 8
+
+local HttpService = game:GetService("HttpService")
+local function formatTime(seconds)
+    days = math.floor(seconds / 86400)
+    hours = math.floor((seconds % 86400) / 3600)
+    minutes = math.floor((seconds % 3600) / 60)
+    secs = seconds % 60
+    return days, hours, minutes, secs
+end
+
+local function format_ExpireTimeKey(days, hours, minutes, secs)
+	days_show, hours_show, minutes_show, secs_show, Resut_show = "error","error","error","error","error";
+	pcall(function()
+		if days == 0 then days_show = "" else days_show = days.." วัน " end;
+		if hours == 0 then hours_show = "" else	hours_show = hours.." ชั่วโมง "	end;
+		if minutes == 0 then minutes_show = "" else	minutes_show = minutes.." นาที " end;
+		if secs == 0 then secs_show = "" else secs_show = secs.." วินาที " end;
+	end)
+	Resut_show = days_show..hours_show..minutes_show..secs_show
+	return Resut_show
+end
+
+-- 📝 ฟังก์ชันบันทึก key พร้อมเวลาหมดอายุ
+local function saveKey(Script_Key)
+    local expireTime = os.time() + (EexpireTime_Key * 3600)
+    local saveData = {
+        key = Script_Key,
+        expireTime = expireTime
+    }
+    if not isfolder("ST_Keys") then
+        makefolder("ST_Keys")
+    end
+    writefile("ST_Keys/"..fileName..".txt", HttpService:JSONEncode(saveData))
+    getgenv().Somtank_ExpireTimeKey = expireTime
+end
+
+-- 📂 ฟังก์ชันโหลด key + เวลา expire
+local function loadKey()
+	if isfolder("ST_Keys") and isfile("ST_Keys/"..fileName..".txt") then
+		local data = HttpService:JSONDecode(readfile("ST_Keys/"..fileName..".txt"))
+		getgenv().Somtank_ExpireTimeKey = data.expireTime
+		return data.key, data.expireTime
+	end
+	return nil
+end
+
+ScreenGui = Instance.new("ScreenGui")
+Frame = Instance.new("Frame")
+UICorner = Instance.new("UICorner")
+UIGradient = Instance.new("UIGradient")
+GetKeyFrame = Instance.new("Frame")
+GetLinkButton = Instance.new("TextButton")
+UICorner_2 = Instance.new("UICorner")
+UIGradient_2 = Instance.new("UIGradient")
+GetKeyFrame_2 = Instance.new("Frame")
+GetLinkButton_2 = Instance.new("TextButton")
+UICorner_3 = Instance.new("UICorner")
+UIGradient_3 = Instance.new("UIGradient")
+KeyPlace = Instance.new("Frame")
+TextBox = Instance.new("TextBox")
+UICorner_4 = Instance.new("UICorner")
+UIGradient_4 = Instance.new("UIGradient")
+TextLabel = Instance.new("TextLabel")
+ShopFrame = Instance.new("Frame")
+UICorner_5 = Instance.new("UICorner")
+TextLabel_2 = Instance.new("TextLabel")
+Slide_Image = Instance.new("ImageLabel")
+UIAspectRatioConstraint = Instance.new("UIAspectRatioConstraint")
+UICorner_6 = Instance.new("UICorner")
+GetWebFrame = Instance.new("Frame")
+GetLinkButton_3 = Instance.new("TextButton")
+UICorner_7 = Instance.new("UICorner")
+UIGradient_5 = Instance.new("UIGradient")
+GetDiscordFrame = Instance.new("Frame")
+GetLinkButton_4 = Instance.new("TextButton")
+UICorner_8 = Instance.new("UICorner")
+UIGradient_6 = Instance.new("UIGradient")
+ScriptFrame = Instance.new("Frame")
+UICorner_9 = Instance.new("UICorner")
+Map_Image = Instance.new("ImageLabel")
+UIAspectRatioConstraint_2 = Instance.new("UIAspectRatioConstraint")
+UICorner_10 = Instance.new("UICorner")
+TextLabel_Map_name = Instance.new("TextLabel")
+stats_TextLabel_ping = Instance.new("TextLabel")
+stats_TextLabel_Players = Instance.new("TextLabel")
+stats_TextLabel_Fps = Instance.new("TextLabel")
+
+ScreenGui.Name = string.gsub(string.char(math.random(65,90),math.random(65,90))..math.random(1000,9999),"%s","")
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+if getgenv().GetKeyUI_Somtank then
+	getgenv().GetKeyUI_Somtank:Destroy()
+	getgenv().GetKeyUI_Somtank = ScreenGui
+else
+	getgenv().GetKeyUI_Somtank = ScreenGui
+end
+if getgenv().BlurPartFrame then
+	getgenv().BlurPartFrame:Destroy()
+end
+
+task.spawn(function()
+	pcall(function()
+		MakeThisFrame = Frame
+		Lighting          = game:GetService("Lighting")
+		camera			= workspace.CurrentCamera
+		BLUR_SIZE         = Vector2.new(10, 10)
+		PART_SIZE         = 0.01
+		PART_TRANSPARENCY = 1 - 1e-7
+		START_INTENSITY	= 0.25
+		MakeThisFrame:SetAttribute("BlurIntensity", START_INTENSITY)
+		BLUR_OBJ          = Instance.new("DepthOfFieldEffect")
+		BLUR_OBJ.FarIntensity   = 0
+		BLUR_OBJ.NearIntensity  = MakeThisFrame:GetAttribute("BlurIntensity")
+		BLUR_OBJ.FocusDistance  = 0.25
+		BLUR_OBJ.InFocusRadius  = 0
+		BLUR_OBJ.Parent         = Lighting
+		PartsList         = {}
+		BlursList         = {}
+		BlurObjects       = {}
+		BlurredGui        = {}
+		BlurredGui.__index      = BlurredGui
+		function rayPlaneIntersect(planePos, planeNormal, rayOrigin, rayDirection)
+			n = planeNormal
+			d = rayDirection
+			v = rayOrigin - planePos
+			num = n.x*v.x + n.y*v.y + n.z*v.z
+			den = n.x*d.x + n.y*d.y + n.z*d.z
+			a = -num / den
+			return rayOrigin + a * rayDirection, a
+		end
+		function rebuildPartsList()
+			PartsList = {}
+			BlursList = {}
+			for blurObj, part in pairs(BlurObjects) do
+				table.insert(PartsList, part)
+				table.insert(BlursList, blurObj)
+			end
+		end
+		function BlurredGui.new(frame, shape)
+			local blurPart        = Instance.new("Part")
+			blurPart.Size         = Vector3.new(1, 1, 1) * 0.01
+			blurPart.Anchored     = true
+			blurPart.CanCollide   = false
+			blurPart.CanTouch     = false
+			blurPart.Material     = Enum.Material.Glass
+			blurPart.Transparency = PART_TRANSPARENCY
+			blurPart.Parent       = workspace.CurrentCamera
+			local mesh
+			if (shape == "Rectangle") then
+				mesh        = Instance.new("BlockMesh")
+				mesh.Parent = blurPart
+			elseif (shape == "Oval") then
+				mesh          = Instance.new("SpecialMesh")
+				mesh.MeshType = Enum.MeshType.Sphere
+				mesh.Parent   = blurPart
+			end
+			ignoreInset = false
+			currentObj  = frame
+			while true do
+				currentObj = currentObj.Parent
+
+				if (currentObj and currentObj:IsA("ScreenGui")) then
+					ignoreInset = currentObj.IgnoreGuiInset
+					break
+				elseif (currentObj == nil) then
+					break
+				end
+			end
+			new = setmetatable({
+				Frame          = frame;
+				Part           = blurPart;
+				Mesh           = mesh;
+				IgnoreGuiInset = ignoreInset;
+			}, BlurredGui)
+			BlurObjects[new] = blurPart
+			rebuildPartsList()
+			game:GetService("RunService"):BindToRenderStep("...", Enum.RenderPriority.Camera.Value + 1, function()				
+				getgenv().BlurPartFrame = blurPart
+				blurPart.CFrame = camera.CFrame * CFrame.new(0,0,0)
+				BlurredGui.updateAll()				
+			end)
+			return new
+		end
+		function updateGui(blurObj)
+			if (not blurObj.Frame.Visible) then
+				blurObj.Part.Transparency = 1
+				return
+			end
+			camera = workspace.CurrentCamera
+			frame  = blurObj.Frame
+			part   = blurObj.Part
+			mesh   = blurObj.Mesh
+			part.Transparency = PART_TRANSPARENCY
+			corner0 = frame.AbsolutePosition + BLUR_SIZE
+			corner1 = corner0 + frame.AbsoluteSize - BLUR_SIZE*2
+			local ray0, ray1
+			if (blurObj.IgnoreGuiInset) then
+				ray0 = camera:ViewportPointToRay(corner0.X, corner0.Y, 1)
+				ray1 = camera:ViewportPointToRay(corner1.X, corner1.Y, 1)
+			else
+				ray0 = camera:ScreenPointToRay(corner0.X, corner0.Y, 1)
+				ray1 = camera:ScreenPointToRay(corner1.X, corner1.Y, 1)
+			end
+			planeOrigin = camera.CFrame.Position + camera.CFrame.LookVector * (0.05 - camera.NearPlaneZ)
+			planeNormal = camera.CFrame.LookVector
+			pos0 = rayPlaneIntersect(planeOrigin, planeNormal, ray0.Origin, ray0.Direction)
+			pos1 = rayPlaneIntersect(planeOrigin, planeNormal, ray1.Origin, ray1.Direction)
+			pos0 = camera.CFrame:PointToObjectSpace(pos0)
+			pos1 = camera.CFrame:PointToObjectSpace(pos1)
+			size   = pos1 - pos0
+			center = (pos0 + pos1)/2
+			mesh.Offset = center
+			mesh.Scale  = size / PART_SIZE
+		end
+		function BlurredGui.updateAll()
+			BLUR_OBJ.NearIntensity = tonumber(MakeThisFrame:GetAttribute("BlurIntensity"))
+			for i = 1, #BlursList do
+				updateGui(BlursList[i])
+			end
+			cframes = table.create(#BlursList, workspace.CurrentCamera.CFrame)
+			workspace:BulkMoveTo(PartsList, cframes, Enum.BulkMoveMode.FireCFrameChanged)
+			BLUR_OBJ.FocusDistance = 0.25 - camera.NearPlaneZ
+		end
+		BlurredGui.new(MakeThisFrame, "Rectangle")
+		BlurredGui.updateAll()
+		return BlurredGui
+	end)
+end)
+
+local lEncode, lDecode, lDigest, Key_Is_valid = a3, aw, Z, false;
+
+local service = 5801;
+local secret = "1506dbcd-c550-4824-a3f3-b267452247f5";
+local useNonce = true;
+
+local onMessage = function(message) end;
+local requestSending = false;
+local fSetClipboard, fRequest, fStringChar, fToString, fStringSub, fOsTime, fMathRandom, fMathFloor, fGetHwid = setclipboard or toclipboard, request or http_request or syn_request, string.char, tostring, string.sub, os.time, math.random, math.floor, gethwid or function() return game:GetService("Players").LocalPlayer.UserId end
+local cachedLink, cachedTime = "", 0;
+local host = "https://api.platoboost.app";
+local hostResponse = fRequest({
+    Url = host .. "/public/connectivity",
+    Method = "GET"
+});
+if hostResponse.StatusCode ~= 200 or hostResponse.StatusCode ~= 429 then
+    host = "https://api.platoboost.net";
+end
+function cacheLink()
+    if cachedTime + (10*60) < fOsTime() then
+        response = fRequest({
+            Url = host .. "/public/start",
+            Method = "POST",
+            Body = lEncode({
+                service = service,
+                identifier = lDigest(fGetHwid())
+            }),
+            Headers = {
+                ["Content-Type"] = "application/json"
+            }
+        });
+        if response.StatusCode == 200 then
+            decoded = lDecode(response.Body);
+            if decoded.success == true then
+                cachedLink = decoded.data.url;
+                cachedTime = fOsTime();
+                return true, cachedLink;
+            else
+                onMessage(decoded.message);
+                return false, decoded.message;
+            end
+        elseif response.StatusCode == 429 then
+            local msg = "you are being rate limited, please wait 20 seconds and try again.";
+            onMessage(msg);
+            return false, msg;
+        end
+
+        msg = "Failed to cache link.";
+        onMessage(msg);
+        return false, msg;
+    else
+        return true, cachedLink;
+    end
+end
+cacheLink();
+local generateNonce = function()
+    str = ""
+    for _ = 1, 16 do
+        str = str .. fStringChar(fMathFloor(fMathRandom() * (122 - 97 + 1)) + 97)
+    end
+    return str
+end
+for _ = 1, 5 do
+    oNonce = generateNonce();
+    task.wait(0.2)
+    if generateNonce() == oNonce then
+        msg = "platoboost nonce error.";
+        onMessage(msg);
+        error(msg);
+    end
+end
+local copyLink = function()
+    local success, link = cacheLink();    
+    if success then
+        fSetClipboard(link);
+    end
+end
+local redeemKey = function(key)
+    local nonce = generateNonce();
+    local endpoint = host .. "/public/redeem/" .. fToString(service);
+    body = {
+        identifier = lDigest(fGetHwid()),
+        key = key
+    }
+    if useNonce then
+        body.nonce = nonce;
+    end
+    response = fRequest({
+        Url = endpoint,
+        Method = "POST",
+        Body = lEncode(body),
+        Headers = {
+            ["Content-Type"] = "application/json"
+        }
+    });
+    if response.StatusCode == 200 then
+        decoded = lDecode(response.Body);
+        if decoded.success == true then
+            if decoded.data.valid == true then
+                if useNonce then
+                    if decoded.data.hash == lDigest("true" .. "-" .. nonce .. "-" .. secret) then
+                        return true;
+                    else
+                        onMessage("failed to verify integrity.");
+                        return false;
+                    end    
+                else
+                    return true;
+                end
+            else
+                onMessage("key is invalid.");
+                return false;
+            end
+        else
+            if fStringSub(decoded.message, 1, 27) == "unique constraint violation" then
+                onMessage("you already have an active key, please wait for it to expire before redeeming it.");
+                return false;
+            else
+                onMessage(decoded.message);
+                return false;
+            end
+        end
+    elseif response.StatusCode == 429 then
+        onMessage("you are being rate limited, please wait 20 seconds and try again.");
+        return false;
+    else
+        onMessage("server returned an invalid status code, please try again later.");
+        return false; 
+    end
+end
+local verifyKey = function(key)
+    if requestSending == true then
+        onMessage("a request is already being sent, please slow down.");
+        return false;
+    else
+        requestSending = true;
+    end
+    local nonce = generateNonce();
+    local endpoint = host .. "/public/whitelist/" .. fToString(service) .. "?identifier=" .. lDigest(fGetHwid()) .. "&key=" .. key;
+    if useNonce then
+        endpoint = endpoint .. "&nonce=" .. nonce;
+    end
+    local response = fRequest({
+        Url = endpoint,
+        Method = "GET",
+    });
+    requestSending = false;
+    if response.StatusCode == 200 then
+        local decoded = lDecode(response.Body);
+        if decoded.success == true then
+            if decoded.data.valid == true then
+                if useNonce then
+                    if decoded.data.hash == lDigest("true" .. "-" .. nonce .. "-" .. secret) then
+                        return true;
+                    else
+                        onMessage("failed to verify integrity.");
+                        return false;
+                    end
+                else
+                    return true;
+                end
+            else
+                if fStringSub(key, 1, 4) == "KEY_" then
+                    return redeemKey(key);
+                else
+                    onMessage("key is invalid.");
+                    return false;
+                end
+            end
+        else
+            onMessage(decoded.message);
+            return false;
+        end
+    elseif response.StatusCode == 429 then
+        onMessage("you are being rate limited, please wait 20 seconds and try again.");
+        return false;
+    else
+        onMessage("server returned an invalid status code, please try again later.");
+        return false;
+    end
+end
+local getFlag = function(name)
+    local nonce = generateNonce();
+    local endpoint = host .. "/public/flag/" .. fToString(service) .. "?name=" .. name;
+    if useNonce then
+        endpoint = endpoint .. "&nonce=" .. nonce;
+    end
+    local response = fRequest({
+        Url = endpoint,
+        Method = "GET",
+    });
+    if response.StatusCode == 200 then
+        local decoded = lDecode(response.Body);
+        if decoded.success == true then
+            if useNonce then
+                if decoded.data.hash == lDigest(fToString(decoded.data.value) .. "-" .. nonce .. "-" .. secret) then
+                    return decoded.data.value;
+                else
+                    onMessage("failed to verify integrity.");
+                    return nil;
+                end
+            else
+                return decoded.data.value;
+            end
+        else
+            onMessage(decoded.message);
+            return nil;
+        end
+    else
+        return nil;
+    end
+end
+
+SavedKey_Somtank, ExpireTimeKey = loadKey()
+if SavedKey_Somtank and ExpireTimeKey then
+	success = verifyKey(SavedKey_Somtank)
+	if success then
+        saveKey(SavedKey_Somtank)
+		ScreenGui:Destroy()
+		Key_Is_valid = true
+		getgenv().BlurPartFrame:Destroy()
+		pcall(function()
+			diff = tonumber(ExpireTimeKey) - tonumber(os.time())
+			game:GetService("StarterGui"):SetCore("SendNotification", {
+				Title = "อายุคีย์ | ExpireTime",
+				Text = "⌛ "..format_ExpireTimeKey(formatTime(diff)),
+				Duration = 8,
+				Button1 = "Close | ปิด",
+				Icon = "rbxassetid://91017172621419"
+			})
+		end)
+	end
+end
+
+Frame.Parent = ScreenGui
+Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Frame.BorderSizePixel = 0
+Frame.Position = UDim2.new(0.240487069, 0, 0.162671238, 0)
+Frame.Size = UDim2.new(0, 681, 0, 393)
+Frame.BackgroundTransparency = 0.3
+
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = Frame
+
+UIGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(83, 53, 118)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(22, 14, 31))}
+UIGradient.Rotation = -129
+UIGradient.Parent = Frame
+
+GetKeyFrame.Name = "GetKeyFrame"
+GetKeyFrame.Parent = Frame
+GetKeyFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+GetKeyFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+GetKeyFrame.BorderSizePixel = 0
+GetKeyFrame.Position = UDim2.new(0.0176837947, 0, 0.875633895, 0)
+GetKeyFrame.Size = UDim2.new(0, 180, 0, 36)
+
+GetLinkButton.Name = "GetLinkButton"
+GetLinkButton.Parent = GetKeyFrame
+GetLinkButton.BackgroundColor3 = Color3.fromRGB(142, 85, 255)
+GetLinkButton.BackgroundTransparency = 1.000
+GetLinkButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+GetLinkButton.BorderSizePixel = 0
+GetLinkButton.Position = UDim2.new(0, 0, -0.0293426514, 0)
+GetLinkButton.Size = UDim2.new(1.01223481, 0, 1.05634904, 0)
+GetLinkButton.Font = Enum.Font.Highway
+GetLinkButton.Text = "ลิงก์หาคีย์"
+GetLinkButton.TextColor3 = Color3.fromRGB(88, 48, 189)
+GetLinkButton.TextScaled = true
+GetLinkButton.TextSize = 14.000
+GetLinkButton.TextWrapped = true
+
+UICorner_2.CornerRadius = UDim.new(0, 12)
+UICorner_2.Parent = GetKeyFrame
+
+UIGradient_2.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(90, 54, 198)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(156, 90, 255))}
+UIGradient_2.Rotation = -79
+UIGradient_2.Parent = GetKeyFrame
+
+GetKeyFrame_2.Name = "GetKeyFrame"
+GetKeyFrame_2.Parent = Frame
+GetKeyFrame_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+GetKeyFrame_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
+GetKeyFrame_2.BorderSizePixel = 0
+GetKeyFrame_2.Position = UDim2.new(0.301452458, 0, 0.878178477, 0)
+GetKeyFrame_2.Size = UDim2.new(0, 180, 0, 36)
+
+GetLinkButton_2.Name = "GetLinkButton"
+GetLinkButton_2.Parent = GetKeyFrame_2
+GetLinkButton_2.BackgroundColor3 = Color3.fromRGB(142, 85, 255)
+GetLinkButton_2.BackgroundTransparency = 1.000
+GetLinkButton_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
+GetLinkButton_2.BorderSizePixel = 0
+GetLinkButton_2.Position = UDim2.new(-1.88838058e-05, 0, -0.0293426514, 0)
+GetLinkButton_2.Size = UDim2.new(1.0122354, 0, 1.05634904, 0)
+GetLinkButton_2.Font = Enum.Font.Highway
+GetLinkButton_2.Text = "ยืนยันคีย์"
+GetLinkButton_2.TextColor3 = Color3.fromRGB(88, 48, 189)
+GetLinkButton_2.TextScaled = true
+GetLinkButton_2.TextSize = 14.000
+GetLinkButton_2.TextWrapped = true
+
+UICorner_3.CornerRadius = UDim.new(0, 12)
+UICorner_3.Parent = GetKeyFrame_2
+
+UIGradient_3.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(90, 54, 198)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(156, 90, 255))}
+UIGradient_3.Rotation = -79
+UIGradient_3.Parent = GetKeyFrame_2
+
+KeyPlace.Name = "KeyPlace"
+KeyPlace.Parent = Frame
+KeyPlace.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+KeyPlace.BorderColor3 = Color3.fromRGB(0, 0, 0)
+KeyPlace.BorderSizePixel = 0
+KeyPlace.Position = UDim2.new(0.0176835246, 0, 0.727412283, 0)
+KeyPlace.Size = UDim2.new(0, 376, 0, 40)
+
+TextBox.Parent = KeyPlace
+TextBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TextBox.BackgroundTransparency = 1.000
+TextBox.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TextBox.BorderSizePixel = 0
+TextBox.Position = UDim2.new(0.0118249543, 0, 0.0875091553, 0)
+TextBox.Size = UDim2.new(0.982032359, 0, 0.865306079, 0)
+TextBox.Font = Enum.Font.Highway
+TextBox.PlaceholderColor3 = Color3.fromRGB(208, 208, 208)
+TextBox.PlaceholderText = "ใส่คีย์ตรงนี้"
+TextBox.Text = ""
+TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextBox.TextScaled = true
+TextBox.TextSize = 14.000
+TextBox.TextWrapped = true
+TextBox.TextXAlignment = Enum.TextXAlignment.Left
+
+UICorner_4.CornerRadius = UDim.new(0, 12)
+UICorner_4.Parent = KeyPlace
+
+UIGradient_4.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(90, 54, 198)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(156, 90, 255))}
+UIGradient_4.Rotation = -79
+UIGradient_4.Parent = KeyPlace
+
+TextLabel.Parent = Frame
+TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.BackgroundTransparency = 1.000
+TextLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TextLabel.BorderSizePixel = 0
+TextLabel.Position = UDim2.new(0.0176179186, 0, 0.592592657, 0)
+TextLabel.Size = UDim2.new(0, 375, 0, 43)
+TextLabel.Font = Enum.Font.Highway
+TextLabel.Text = "หากติดปัญหาหรือหากต้องการความช่วยเหลือต่างๆ ติดต่อ Discord ได้เลยนะค้าบบ"
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.TextScaled = true
+TextLabel.TextSize = 14.000
+TextLabel.TextTransparency = 0.070
+TextLabel.TextWrapped = true
+Old_Text_TextLabel = tostring(TextLabel.Text)
+
+ShopFrame.Name = "ShopFrame"
+ShopFrame.Parent = Frame
+ShopFrame.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
+ShopFrame.BackgroundTransparency = 0.200
+ShopFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+ShopFrame.BorderSizePixel = 0
+ShopFrame.Position = UDim2.new(0.59471041, 0, 0.055979643, 0)
+ShopFrame.Size = UDim2.new(0, 260, 0, 310)
+
+UICorner_5.CornerRadius = UDim.new(0, 12)
+UICorner_5.Parent = ShopFrame
+
+TextLabel_2.Parent = ShopFrame
+TextLabel_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel_2.BackgroundTransparency = 1.000
+TextLabel_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TextLabel_2.BorderSizePixel = 0
+TextLabel_2.Position = UDim2.new(0.0272991471, 0, -0.0466588177, 0)
+TextLabel_2.Size = UDim2.new(0, 245, 0, 29)
+TextLabel_2.Font = Enum.Font.Highway
+TextLabel_2.Text = "คีย์ทั้งหมดของเรา"
+TextLabel_2.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel_2.TextScaled = true
+TextLabel_2.TextSize = 14.000
+TextLabel_2.TextWrapped = true
+TextLabel_2.TextXAlignment = Enum.TextXAlignment.Left
+
+Slide_Image.Name = "Slide_Image"
+Slide_Image.Parent = ShopFrame
+Slide_Image.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Slide_Image.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Slide_Image.BackgroundTransparency = 1
+Slide_Image.BorderSizePixel = 0
+Slide_Image.Position = UDim2.new(0.0542222261, 0, 0.0677419379, 0)
+Slide_Image.Size = UDim2.new(0, 238, 0, 232)
+Slide_Image.Image = "http://www.roblox.com/asset/?id=138329992312221"
+
+UIAspectRatioConstraint.Parent = Slide_Image
+
+UICorner_6.CornerRadius = UDim.new(0, 12)
+UICorner_6.Parent = Slide_Image
+
+GetWebFrame.Name = "GetWebFrame"
+GetWebFrame.Parent = Frame
+GetWebFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+GetWebFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+GetWebFrame.BorderSizePixel = 0
+GetWebFrame.Position = UDim2.new(0.610271811, 0, 0.737464726, 0)
+GetWebFrame.Size = UDim2.new(0, 236, 0, 31)
+
+GetLinkButton_3.Name = "GetLinkButton"
+GetLinkButton_3.Parent = GetWebFrame
+GetLinkButton_3.BackgroundColor3 = Color3.fromRGB(142, 85, 255)
+GetLinkButton_3.BackgroundTransparency = 1.000
+GetLinkButton_3.BorderColor3 = Color3.fromRGB(0, 0, 0)
+GetLinkButton_3.BorderSizePixel = 0
+GetLinkButton_3.Position = UDim2.new(0.00381197012, 0, -0.030665243, 0)
+GetLinkButton_3.Size = UDim2.new(1.02083158, 0, 1.10397851, 0)
+GetLinkButton_3.Font = Enum.Font.Highway
+GetLinkButton_3.Text = "ลิงก์เว็บซื้อคีย์"
+GetLinkButton_3.TextColor3 = Color3.fromRGB(88, 48, 189)
+GetLinkButton_3.TextScaled = true
+
+
+UICorner_7.CornerRadius = UDim.new(0, 12)
+UICorner_7.Parent = GetWebFrame
+
+UIGradient_5.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(90, 54, 198)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(156, 90, 255))}
+UIGradient_5.Rotation = -79
+UIGradient_5.Parent = GetWebFrame
+
+GetDiscordFrame.Name = "GetDiscordFrame"
+GetDiscordFrame.Parent = Frame
+GetDiscordFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+GetDiscordFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+GetDiscordFrame.BorderSizePixel = 0
+GetDiscordFrame.Position = UDim2.new(0.609538317, 0, 0.880099714, 0)
+GetDiscordFrame.Size = UDim2.new(0, 240, 0, 32)
+
+GetLinkButton_4.Name = "GetLinkButton"
+GetLinkButton_4.Parent = GetDiscordFrame
+GetLinkButton_4.BackgroundColor3 = Color3.fromRGB(142, 85, 255)
+GetLinkButton_4.BackgroundTransparency = 1.000
+GetLinkButton_4.BorderColor3 = Color3.fromRGB(0, 0, 0)
+GetLinkButton_4.BorderSizePixel = 0
+GetLinkButton_4.Position = UDim2.new(0.00381800323, 0, -0.0314426422, 0)
+GetLinkButton_4.Size = UDim2.new(1.02249587, 0, 1.13197935, 0)
+GetLinkButton_4.Font = Enum.Font.Highway
+GetLinkButton_4.Text = "ลิงก์ Discord"
+GetLinkButton_4.TextColor3 = Color3.fromRGB(255, 255, 255)
+GetLinkButton_4.TextScaled = true
+GetLinkButton_4.TextSize = 14.000
+GetLinkButton_4.TextWrapped = true
+
+UICorner_8.CornerRadius = UDim.new(0, 12)
+UICorner_8.Parent = GetDiscordFrame
+
+UIGradient_6.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(104, 90, 255)), ColorSequenceKeypoint.new(0.14, Color3.fromRGB(119, 126, 255)), ColorSequenceKeypoint.new(0.83, Color3.fromRGB(119, 126, 255)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(104, 90, 255))}
+UIGradient_6.Rotation = -180
+UIGradient_6.Parent = GetDiscordFrame
+
+ScriptFrame.Name = "ScriptFrame"
+ScriptFrame.Parent = Frame
+ScriptFrame.BackgroundColor3 = Color3.fromRGB(53, 53, 53)
+ScriptFrame.BackgroundTransparency = 0.300
+ScriptFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+ScriptFrame.BorderSizePixel = 0
+ScriptFrame.Position = UDim2.new(0.0176211447, 0, 0.0381679386, 0)
+ScriptFrame.Size = UDim2.new(0, 374, 0, 204)
+
+UICorner_9.CornerRadius = UDim.new(0, 12)
+UICorner_9.Parent = ScriptFrame
+
+Map_Image.Name = "Map_Image"
+Map_Image.Parent = ScriptFrame
+Map_Image.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Map_Image.BackgroundTransparency = 0.5
+Map_Image.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Map_Image.BorderSizePixel = 0
+Map_Image.Position = UDim2.new(0.0355055705, 0, 0.0709677339, 0)
+Map_Image.Size = UDim2.new(0, 175, 0, 203)
+Map_Image.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+
+UIAspectRatioConstraint_2.Parent = Map_Image
+
+UICorner_10.CornerRadius = UDim.new(0, 12)
+UICorner_10.Parent = Map_Image
+
+MarketplaceService = game:GetService("MarketplaceService")
+Map_Name_info = MarketplaceService:GetProductInfo(game.PlaceId)
+
+TextLabel_Map_name.Parent = ScriptFrame
+TextLabel_Map_name.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel_Map_name.BackgroundTransparency = 1.000
+TextLabel_Map_name.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TextLabel_Map_name.BorderSizePixel = 0
+TextLabel_Map_name.Position = UDim2.new(0.530986905, 0, 0.0680829212, 0)
+TextLabel_Map_name.Size = UDim2.new(0, 168, 0, 52)
+TextLabel_Map_name.Font = Enum.Font.Highway
+TextLabel_Map_name.Text = Map_Name_info.Name or "Unknown Game"
+TextLabel_Map_name.TextColor3 = Color3.fromRGB(193, 123, 255)
+TextLabel_Map_name.TextScaled = true
+TextLabel_Map_name.TextSize = 14.000
+TextLabel_Map_name.TextTransparency = 0.070
+TextLabel_Map_name.TextWrapped = true
+
+stats_TextLabel_ping.Name = "stats_TextLabel_ping"
+stats_TextLabel_ping.Parent = ScriptFrame
+stats_TextLabel_ping.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+stats_TextLabel_ping.BackgroundTransparency = 1.000
+stats_TextLabel_ping.BorderColor3 = Color3.fromRGB(0, 0, 0)
+stats_TextLabel_ping.BorderSizePixel = 0
+stats_TextLabel_ping.Position = UDim2.new(0.52831316, 0, 0.352396637, 0)
+stats_TextLabel_ping.Size = UDim2.new(0, 168, 0, 21)
+stats_TextLabel_ping.Font = Enum.Font.Highway
+stats_TextLabel_ping.Text = "ปิง : ---ms"
+stats_TextLabel_ping.TextColor3 = Color3.fromRGB(255, 255, 255)
+stats_TextLabel_ping.TextScaled = true
+stats_TextLabel_ping.TextSize = 14.000
+stats_TextLabel_ping.TextTransparency = 0.180
+stats_TextLabel_ping.TextWrapped = true
+
+stats_TextLabel_Players.Name = "stats_TextLabel_Players"
+stats_TextLabel_Players.Parent = ScriptFrame
+stats_TextLabel_Players.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+stats_TextLabel_Players.BackgroundTransparency = 1.000
+stats_TextLabel_Players.BorderColor3 = Color3.fromRGB(0, 0, 0)
+stats_TextLabel_Players.BorderSizePixel = 0
+stats_TextLabel_Players.Position = UDim2.new(0.530986905, 0, 0.488719553, 0)
+stats_TextLabel_Players.Size = UDim2.new(0, 168, 0, 21)
+stats_TextLabel_Players.Font = Enum.Font.Highway
+stats_TextLabel_Players.Text = "ผู้เล่นในเซิร์ฟ -- คน"
+stats_TextLabel_Players.TextColor3 = Color3.fromRGB(255, 255, 255)
+stats_TextLabel_Players.TextScaled = true
+stats_TextLabel_Players.TextSize = 14.000
+stats_TextLabel_Players.TextTransparency = 0.180
+stats_TextLabel_Players.TextWrapped = true
+
+stats_TextLabel_Fps.Name = "stats_TextLabel_Fps"
+stats_TextLabel_Fps.Parent = ScriptFrame
+stats_TextLabel_Fps.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+stats_TextLabel_Fps.BackgroundTransparency = 1.000
+stats_TextLabel_Fps.BorderColor3 = Color3.fromRGB(0, 0, 0)
+stats_TextLabel_Fps.BorderSizePixel = 0
+stats_TextLabel_Fps.Position = UDim2.new(0.530986905, 0, 0.636727154, 0)
+stats_TextLabel_Fps.Size = UDim2.new(0, 168, 0, 21)
+stats_TextLabel_Fps.Font = Enum.Font.Highway
+stats_TextLabel_Fps.Text = "Fps --"
+stats_TextLabel_Fps.TextColor3 = Color3.fromRGB(255, 255, 255)
+stats_TextLabel_Fps.TextScaled = true
+stats_TextLabel_Fps.TextSize = 14.000
+stats_TextLabel_Fps.TextTransparency = 0.180
+stats_TextLabel_Fps.TextWrapped = true
+
+local function Add_UIStroke(item_to_Add, Tran, Thick, Color, Mode)
+	if Mode then
+		Mode = Enum.ApplyStrokeMode.Border
+	else
+		Mode = Enum.ApplyStrokeMode.Contextual
+	end
+	UIStroke = Instance.new("UIStroke", item_to_Add)
+	UIStroke.Transparency = Tran
+	UIStroke.Thickness = Thick
+	UIStroke.Color = Color
+	UIStroke.ApplyStrokeMode = Mode
+	return UIStroke
+end
+
+Add_UIStroke(TextLabel_Map_name, 0.59, 1.6, Color3.new(0, 0, 0), false)
+Add_UIStroke(stats_TextLabel_Fps, 0.59, 1.6, Color3.new(0, 0, 0), false)
+Add_UIStroke(stats_TextLabel_ping, 0.59, 1.6, Color3.new(0, 0, 0), false)
+Add_UIStroke(stats_TextLabel_Players, 0.59, 1.6, Color3.new(0, 0, 0), false)
+Add_UIStroke(TextLabel, 0.59, 1.6, Color3.new(0, 0, 0), false)
+Add_UIStroke(TextLabel_2, 0, 3, Color3.new(0.211765, 0.211765, 0.211765), false)
+Add_UIStroke(GetLinkButton_3, 0, 1.6, Color3.new(0.831373, 0.831373, 0.831373), false)
+Add_UIStroke(GetLinkButton, 0, 1.6, Color3.new(0.831373, 0.831373, 0.831373), false)
+Add_UIStroke(GetLinkButton_4, 0.1, 1.6, Color3.new(0.2, 0.317647, 0.517647), false)
+Add_UIStroke(GetLinkButton_2, 0, 1.6, Color3.new(0.831373, 0.831373, 0.831373), false)
+
+for _, item in ipairs(ScreenGui:GetDescendants()) do
+	if not item:FindFirstChild("UIStroke") then
+		if item:IsA("Frame") then
+			Add_UIStroke(item, 0.59, 1.6, Color3.new(1, 1, 1), false)
+		elseif item:IsA("TextLabel") then
+			Add_UIStroke(item, 0.59, 1.6, Color3.new(1, 1, 1), false)
+		elseif item:IsA("ImageLabel") then
+			Add_UIStroke(item, 0.59, 1.6, Color3.new(1, 1, 1), false)
+		end
+	end
+end
+
+TweenService = game:GetService("TweenService")
+backgroundFrame = Frame
+-- การตั้งค่า Effect
+CIRCLE_COUNT = 40 -- จำนวนวงกลม
+MIN_SIZE = 3 -- ขนาดเล็กสุด
+MAX_SIZE = 8 -- ขนาดใหญ่สุด
+MIN_SPEED = 10 -- ความเร็วขั้นต่ำ (วินาที)
+MAX_SPEED = 30 -- ความเร็วสูงสุด (วินาที)
+OPACITY_RANGE = {0.3, 0.5}
+local function moveCircle(circle)
+	if not circle.Parent then return end
+	-- สุ่มตำแหน่งใหม่
+	newX = math.random(-circle.AbsoluteSize.X, backgroundFrame.AbsoluteSize.X)
+	newY = math.random(-circle.AbsoluteSize.Y, backgroundFrame.AbsoluteSize.Y)
+	-- สุ่มเวลาในการเคลื่ยนไหว
+	duration = math.random(MIN_SPEED, MAX_SPEED)
+	-- สร้าง Tween
+	tweenInfo = TweenInfo.new(
+		duration,
+		Enum.EasingStyle.Linear,
+		Enum.EasingDirection.InOut,
+		0, -- ไม่ repeat
+		false, -- ไม่ reverse
+		0 -- ไม่ delay
+	)
+	tween = TweenService:Create(circle, tweenInfo, {
+		Position = UDim2.new(0, newX, 0, newY),
+		Rotation = circle.Rotation + math.random(-180, 180)
+	})
+	tween:Play()
+	tween.Completed:Connect(function()
+		moveCircle(circle) -- เรียกตัวเองใหม่เมื่อเสร็จ
+	end)
+end
+-- ฟังก์ชันสร้างวงกลม
+function createFloatingCircle()
+	circle = Instance.new("Frame")
+	circle.Name = "FloatingCircle"
+	circle.Parent = backgroundFrame
+	-- สุ่มขนาด
+	size = math.random(MIN_SIZE, MAX_SIZE)
+	circle.Size = UDim2.new(0, size, 0, size)
+	circle.ZIndex = -1
+	circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	circle.BackgroundTransparency = math.random(OPACITY_RANGE[1] * 100, OPACITY_RANGE[2] * 100) / 100
+	circle.BorderSizePixel = 0
+	corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(1, 0)
+	corner.Parent = circle
+	startX = math.random(-circle.AbsoluteSize.X, backgroundFrame.AbsoluteSize.X)
+	startY = math.random(-circle.AbsoluteSize.Y, backgroundFrame.AbsoluteSize.Y)
+	circle.Position = UDim2.new(0, startX, 0, startY)
+	moveCircle(circle)
+	return circle
+end
+function startFloatingEffect()
+	for _, child in pairs(backgroundFrame:GetChildren()) do
+		if child.Name == "FloatingCircle" then
+			child:Destroy()
+		end
+	end
+	for i = 1, CIRCLE_COUNT do
+		createFloatingCircle()
+		wait(0.001)
+	end
+end
+function stopFloatingEffect()
+	for _, child in pairs(backgroundFrame:GetChildren()) do
+		if child.Name == "FloatingCircle" then
+			child:Destroy()
+		end
+	end
+end
+startFloatingEffect()
+UIS = game:GetService("UserInputService")
+ dragging = false
+local dragInput, dragStart, startPos
+local function delui(type)
+	if type == true then
+		playerGui = game.Players.LocalPlayer:FindFirstChild("PlayerGui")
+		if playerGui then
+			for _, gui in ipairs(playerGui:GetChildren()) do
+				if gui.Name == "key" then
+					gui:Destroy()
+				end
+			end
+		end
+	end
+end
+local function update(input)
+	if not dragging then return end
+	delta = input.Position - dragStart
+	Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+		startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+Frame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = Frame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+Frame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+UIS.InputChanged:Connect(function(input)
+	if input == dragInput then
+		update(input)
+	end
+end)
+
+Map_Image_re, Produc_re = loadstring(game:HttpGet('https://raw.githubusercontent.com/MQPS7/NoPlan/refs/heads/main/Produc1'))()
+
+Slide_Image.Image = Produc_re or "http://www.roblox.com/asset/?id=138329992312221"
+
+if Map_Image_re then
+	Map_Image.Image = Map_Image_re
+else
+	Map_Image.Image = "http://www.roblox.com/asset/?id=3033152788"
+end
+
+task.spawn(function()
+	stats = game:GetService("Stats")
+	RunService = game:GetService("RunService")
+	fps, Ping = 0, 0
+	RunService.RenderStepped:Connect(function(dt)
+		fps = math.floor(1/dt)
+	end)
+	while true do
+		pcall(function()
+			rawPing = stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
+			Ping = string.match(rawPing, "^[%d%.]+")
+			stats_TextLabel_Players.Text = "ผู้เล่นในเซิร์ฟ "..#game.Players:GetPlayers().." คน"
+			stats_TextLabel_ping.Text = "ปิง "..math.floor(tonumber(Ping)).."ms"
+			stats_TextLabel_Fps.Text = "Fps "..fps
+		end)
+		wait(0.7)
+	end
+end)
+
+local function Play_Sound(Id)
+	task.spawn(function()
+		Sound = Instance.new("Sound", game:GetService("SoundService"))
+		Sound.SoundId = Id
+		Sound.Volume = 1
+		Sound:Play()
+		wait(3)
+		Sound:Destroy()
+	end)
+end
+local function GetScaledSizeAndPos(gui, factor)
+	oldSize = gui.Size
+	newSize = UDim2.new(
+		oldSize.X.Scale * factor,
+		oldSize.X.Offset * factor,
+		oldSize.Y.Scale * factor,
+		oldSize.Y.Offset * factor
+	)
+	offsetX = (oldSize.X.Offset - newSize.X.Offset) / 2
+	offsetY = (oldSize.Y.Offset - newSize.Y.Offset) / 2
+	newPos = UDim2.new(
+		gui.Position.X.Scale,
+		gui.Position.X.Offset + offsetX,
+		gui.Position.Y.Scale,
+		gui.Position.Y.Offset + offsetY
+	)
+	return newSize, newPos
+end
+local function AnimateButton(button)
+	if not button or not button:IsA("GuiObject") then return end
+	originalSize = button.Size
+	originalPos = button.Position
+
+	size1, pos1 = GetScaledSizeAndPos(button, 0.9)
+	size2, pos2 = GetScaledSizeAndPos(button, 1.1)
+	tween1 = TweenService:Create(button, TweenInfo.new(0.1), {Size = size1, Position = pos1})
+	tween2 = TweenService:Create(button, TweenInfo.new(0.1), {Size = size2, Position = pos2})
+	tween3 = TweenService:Create(button, TweenInfo.new(0.1), {Size = originalSize, Position = originalPos})
+
+	tween1:Play()
+	tween1.Completed:Connect(function()
+		tween2:Play()
+		tween2.Completed:Connect(function()
+			tween3:Play()
+		end)
+	end)
+end
+
+local function Nontification(tel)
+	task.spawn(function()
+		TextLabel.Text = tel
+		wait(3)
+		TextLabel.Text = Old_Text_TextLabel
+	end)
+end
+
+GetLinkButton_3.Activated:Connect(function()
+	GetLinkButton_3.Active = false
+	AnimateButton(GetLinkButton_3.Parent)
+	Play_Sound("rbxassetid://500472891")
+	setclipboard("https://somtank.xyz")
+	wait(0.35)
+	GetLinkButton_3.Active = true
+end)
+
+GetLinkButton_4.Activated:Connect(function()
+	GetLinkButton_4.Active = false
+	AnimateButton(GetLinkButton_4.Parent)
+	Play_Sound("rbxassetid://500472891")
+	setclipboard("https://discord.gg/4v4X79djPs")
+	wait(0.35)
+	GetLinkButton_4.Active = true
+end)
+
+GetLinkButton_2.Activated:Connect(function()
+	GetLinkButton_2.Active = false
+	AnimateButton(GetLinkButton_2.Parent)
+	Play_Sound("rbxassetid://500472891")
+	success = verifyKey(TextBox.Text);
+	if success then
+		saveKey(TextBox.Text)
+		ScreenGui:Destroy()
+		Key_Is_valid = true
+		getgenv().BlurPartFrame:Destroy()
+	else
+		Nontification("คีย์ไม่ถูกต้อง")
+	end
+	wait(0.35)
+	GetLinkButton_2.Active = true
+end)
+
+GetLinkButton.Activated:Connect(function()
+	GetLinkButton.Active = false
+	AnimateButton(GetLinkButton.Parent)
+	Play_Sound("rbxassetid://500472891")
+    copyLink()
+	wait(0.35)
+	GetLinkButton.Active = true
+end)
+
+repeat wait(0.1) until Key_Is_valid == true
+
 repeat
 	wait(1)
 until game:IsLoaded()
@@ -44,7 +1117,7 @@ queue_on_teleport([[
  local Uid_In_Server = ']] .. UserInfo .. [['
  getgenv().Webhook = ']] .. DC_Webhook .. [['
  getgenv().Info_Script = HttpService:JSONDecode(Uid_In_Server)
- loadstring(game:HttpGet("https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_2"))()
+ loadstring(game:HttpGet("https://raw.githubusercontent.com/jf5ndke8i7d4/Jenop789/refs/heads/main/t_1"))()
 ]])
 local function HopServer(player)
 	game:GetService("TeleportService"):Teleport(79546208627805, game.Players.LocalPlayer)
